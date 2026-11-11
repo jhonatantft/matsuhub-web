@@ -1,0 +1,35 @@
+{
+  "fixed": [
+    "components/home/Marquee.tsx:11: the second marquee row added third-party product names (Supabase, Three.js, OpenAI, Claude, Vercel, n8n, Postgres) that the owner never confirmed using. Changed STACK to `[...new Set(SERVICES.flatMap((s) => s.tags))]`, so the row now shows only the tags already in content/site.ts. Checked with a 1024px screenshot: the row reads CRM · ERP · LLMS · RAG · TOOLS · WHATSAPP · NEXT.JS · TYPESCRIPT · CLOUD · 3D · MOTION and still loops.",
+    "app/globals.css:117-128 (`text-outline`, `text-outline-acc`): with Unbounded, the transparent fill plus stroke showed stray contour lines inside the glyphs of the hero's 'Agentes' (A crossbar, g, e), visible in a 1440 screenshot. The fill is now var(--color-bg), the stroke is 3px and `paint-order: stroke fill` is set, the same fix Contact.tsx already uses. Re-shot at 1024 and the outline is clean. The comment had to go outside the @utility block: an apostrophe inside it made Tailwind keep serving the stale rule. components/layout/Footer.tsx:41: the wordmark stroke-width override went from 1px to 2px so its visible line weight stays the same.",
+    "components/aurora/site/SitePlans.tsx (Lightbox onKeyDown): the room lightbox is aria-modal but had no focus trap, so Tab past the last arrow button moved focus into the page hidden behind the full-screen overlay. Added Tab / Shift+Tab wrapping between the first and last buttons. Checked with --eval: Tab from the last button lands on 'Fechar', and Shift+Tab from 'Fechar' lands on the last button.",
+    "components/aurora/site/SiteLia.tsx: opening the chat left focus on the launcher, which fades out (invisible). Closing with the X or Escape put the inert panel's focus on <body>, and the chat input had `focus:outline-none` with no other focus indicator. The panel now has tabIndex=-1 and outline-none and takes focus when it opens. The X button and Escape return focus to the launcher when focus was inside the panel. The input now gets a 1px gold focus-visible outline. Checked with --eval: activeElement is #aurora-lia after opening, and the launcher after X or Escape. The X button also got a 40px invisible hit area (was 36px).",
+    "Touch targets under 40px, fixed with invisible ::before hit-area extensions (no visual change) and checked with elementFromPoint: plan hotspots in SitePlans.tsx (26px, extended to about 42px; on phones they have no visible label); Dia/Noite toggle in SiteTour.tsx (26px tall, now 42px); Aurora burger in SiteHeader.tsx (34px, now 40px); 'Repetir a simulação' in components/home/parts-b/AgentRun.tsx (32px, now 40px). The demo ribbon links '← Voltar' and 'Quero um assim →' in SiteHeader.tsx were 11px tall; they now fill the full 32px ribbon height (gap-1.5 added so the arrow keeps its space).",
+    "Contrast: the `text-dim` token (#5b6760) measures 3.4:1 on bg (computed), below AA 4.5:1, and it was used for body text. Switched these to text-mute (6.9:1) or text-mute/80 (4.7:1): the privacy note under the lead form (components/home/parts-b/LeadForm.tsx:268), the simulation disclaimer under the agent panel (components/home/Agents.tsx:51), and the footer column labels and the 'em breve' items (components/layout/Footer.tsx). The token itself is unchanged, since other reviewers' files use it."
+  ],
+  "left": [
+    "Contact.tsx 'Falar no WhatsApp' / 'Enviar e-mail' still have href=\"#\" (a builder TODO). The real number and e-mail have to come from the owner.",
+    "Aurora filter chips in SiteUnits (34px tall) and the home segment pills (33px, in DemoShowcase.tsx, which is outside my area) are still under 40px. Both are above the WCAG 2.2 AA minimum of 24px, and raising them would mean restyling.",
+    "The Aurora demo ribbon links are now 32px tall: that is the full height of the 32px ribbon. Getting to 40px would mean changing the ribbon's design.",
+    "The `text-dim` token is still 3.4:1. It remains on placeholders, mono timestamps and counters in the agent trace, and a card caption. Those are secondary or decorative uses, so I did not raise the token for the whole site.",
+    "LeadForm.tsx calls requestAnimationFrame directly (lines 95 and 103), which breaks the 'only onFrame' rule in docs/design-system.md, but it only moves focus and works. I left it alone.",
+    "The footer wordmark is cut off at the right edge from about 1024px wide (whitespace-nowrap at 17vw). It is decorative and aria-hidden, and the bleed looks intentional. No page overflow results."
+  ],
+  "verified": [
+    "Horizontal overflow: document.documentElement.scrollWidth equals innerWidth at 390, 768, 1024 and 1440 on both / and /demos/imobiliarias. The only element extending past the edge is the fixed cursor glow, which is clipped (body overflow-x: clip).",
+    "Anchors: clicking #servicos, #demos, #agentes, #processo and #contato from the bottom of the page (scrolling up, so the nav is showing) puts each section's label 150-170px from the top on desktop and 80-90px on mobile. The nav is 68px, so nothing lands under it. Lenis respects scroll-padding and the sections have enough top padding.",
+    "Mobile menu: opens, locks scroll, closes on link click and Escape, and the anchor navigation from it lands correctly. documentElement overflow is restored afterwards.",
+    "Heading order is correct on both pages: one h1, then h2 and h3 with no skipped levels.",
+    "Every <img> has alt and sizes or eager loading. Inputs in LeadForm, SiteVisit, SiteFinance and the Lia chat all have labels.",
+    "Reduced motion: the global CSS rule plus reducedMotion() checks in Marquee, Label, Magnetic, CursorGlow, SmoothScroll, AgentRun and others. No content is revealed only on hover.",
+    "Portuguese copy in my area scanned; found no spelling or accent mistakes.",
+    "npx tsc --noEmit: clean. npx eslint on all changed files: clean. shot.mjs printed no page errors on any run."
+  ],
+  "rejected": [
+    "Anchors landing under the fixed nav: they don't, because section padding (at least 80px) is larger than the 68px nav (measured above).",
+    "Lightbox Escape and initial focus: these already worked. Focus moves to 'Fechar' on open and is restored on close.",
+    "LeadForm inputs use outline-none, but they have a replacement focus style (accent border plus box-shadow ring), and the interest checkboxes use a has-[input:focus-visible] outline.",
+    "The hero h1 is built from block spans, so the textContent has no spaces between lines ('Softwareque'). Screen readers treat the block lines as separate, and I could not show a concrete failure, so I left it.",
+    "Aurora gold and muted text contrast is fine (au-mute 7.5-8.1:1, au-gold 11:1 on au-bg and au-bg-2)."
+  ]
+}

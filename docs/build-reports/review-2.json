@@ -1,0 +1,28 @@
+{
+  "fixed": [
+    "/Users/jhonatan/workspace/personal/matsuhub-web/components/aurora/showcase/ShowcaseScene.tsx:407. On phones the pinned stage had only `pt-3` of top padding. When the visitor scrolled back up, the fixed 68px site Nav slid in and covered the window's URL bar and the Aurora top bar. I confirmed it with a --mobile screenshot after scrolling down then up inside the pin (.shots/rv3-m-nav.png). The fix: the sticky container now uses `pt-[calc(var(--nav-h)+12px)]` at every width, which was already the `lg:` value, and the duplicate `lg:pt-*` class is gone. Re-checked on mobile with the Nav shown (.shots/rv3-m-nav2.png) and at p=0.63 (plan) and p=0.86 (chat). The layout still fits and there are no page errors.",
+    "/Users/jhonatan/workspace/personal/matsuhub-web/components/aurora/stage-core.ts:1211. The stage set its canvas DPR only inside its ResizeObserver callback, which also returns early when the CSS size has not changed. Moving the window to a screen with a different devicePixelRatio left the canvas at the old ratio, so it was blurry on retina (or oversized after moving the other way). I confirmed this from the code path only, because shot.mjs cannot change DPR. The fix: the frame loop now compares `maxDpr(tier)` with the current `dpr` and calls `gl.resize` when they differ, the same thing the hub engine already does. After the change, mobile reports canvas 348x568 for 348x568 CSS at dpr 1. tsc is clean for my files and eslint is clean on both edited files."
+  ],
+  "left": [
+    "The showcase's onFrame callback (pinProgress getBoundingClientRect, stage.set, placeFloorCard offsetWidth reads) runs every ticker frame even when the stage is far off screen. It draws nothing and style writes are change-guarded, so it costs only a little CPU. Gating it needs a design decision in stage-core: the overlays rely on it to stay in sync. I left it.",
+    "Small per-frame allocations remain: findTransition returns a new object on each scrub/clipAsset call during flights, there are transform template strings, and the hub's DOMRect per frame was already in the build report. These are minor GC pressure, not proven to cause failures.",
+    "I did not check on a real device: iOS Safari behaviour of scrubbing a paused blob video that was never played, and whether loadeddata fires with preload=auto on iOS. The code sets muted/playsinline correctly, and if a clip never becomes ready, scrub returns false and the shader cut takes over, so it degrades rather than breaks.",
+    "ImageBitmaps are kept alive after they are uploaded to GPU textures (closed only on dispose), which doubles memory per picture on some browsers. The -1600 variants are used on phones (2688x1520 source, so a mobile stage stays at or below 1840 device px). I did not change it because it is not shown to fail."
+  ],
+  "verified": [
+    "Forced WebGL context loss on the Aurora stage (WEBGL_lose_context on /lab/showcase?p=0.45): it falls back to the <img> layers with the floor band and card still placed, and no page errors (.shots/rv3-lost.png).",
+    "Forced lose+restore on the hub canvas (/lab/hub): the scene resumes rendering after restore, with no errors (.shots/rv3-hublost.png).",
+    "Fast forward and backward scrolling through the pinned showcase (0.2→0.5→0.62→0.74→0.9→0.58, and 0.9→0.3) in real time: the right picture, the clip scrubbed inside flight 0 and the dials/HUD were consistent, and the data-loading flag did not get stuck.",
+    "Leak and StrictMode check on / after scrolling into flight 0 in dev: 2 canvases (hub plus stage), 1 stage canvas, 2 video elements, no duplicates.",
+    "Mobile (--mobile) screenshots at p=0.63, 0.70 and 0.86, plus the AuroraTour lab section on desktop: no page errors.",
+    "npx tsc --noEmit prints nothing for components/aurora, components/three or DemoShowcase; npx eslint on the edited files is clean."
+  ],
+  "rejected": [
+    "Hub engine disposal: geometries, materials, bloom, output pass, composer (which disposes both of its render targets), renderer and forceContextLoss are all covered; listeners and observers are removed; a fresh canvas is made per mount, so it survives StrictMode.",
+    "Hub render gating: it skips frames when off screen (IntersectionObserver), when the tab is hidden, and when scrolled past the hero. Reduced motion redraws only on resize or scroll. A DPR change is handled.",
+    "Clip layer (stage-video.ts): videos are muted, defaultMuted and playsinline with the attributes set, and disablePictureInPicture is on. Blob URLs are revoked, fetches aborted and videos unloaded on destroy. Seeking is guarded by a frame change and !video.seeking, so there is no seeking storm.",
+    "Save-data, reduced motion and the low tier all turn clips off (clipsAllowed). Reduced motion makes goTo cut instantly.",
+    "Stage boot after unmount: there are dead checks after the dynamic import and after each fetch; bitmaps are closed when the stage is dead or the GL is gone.",
+    "AuroraChat clears its timers on cleanup. Hotspots and the floor card read layout only through offsetWidth/Height before writing, and the tab position is cached per size."
+  ]
+}

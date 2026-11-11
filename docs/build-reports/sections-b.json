@@ -1,0 +1,38 @@
+{
+  "summary": "I built the Agents section, the Contact section and the /api/lead endpoint with Supabase. Agents has a header with the copy you specified, three proof points and an interactive \"agent run\" panel. The panel has scenario tabs (Imobiliária, Clínica, E-commerce, with arrow-key support) and a node graph: the agent core sits in the centre with six tools around it, the active tool lights up and a glowing pulse travels along its curved edge. A timeline trace streams step by step: incoming message, a \"pensar\" step with a shimmer, tool calls with a spinner then the result and latency, the reply typed with a caret, and a final ✓ card with the elapsed time and outcome chips. It is all scripted and labelled \"simulação\". It autoplays when scrolled into view, pauses off screen or in a hidden tab, has a replay button, moves on to the next scenario after a pause until the user picks a tab, and shows the finished run under reduced motion. Contact has the huge \"Vamos construir / o seu?\" headline (outline in lime), a glass form card with the fields you listed, pt-BR inline validation and idle/sending/success/error states, plus a \"what happens next\" column and the two placeholder buttons. The endpoint validates with zod, accepts both payload shapes, uses a honeypot, a 10 KB body cap and a JSON-only check, and stores leads in Supabase through a server-only service-role client. It degrades as specified when the env vars are missing; the migration, README and .env.example are included.",
+  "files": [
+    "components/home/Agents.tsx",
+    "components/home/Contact.tsx",
+    "components/home/parts-b/AgentRun.tsx",
+    "components/home/parts-b/AgentGraph.tsx",
+    "components/home/parts-b/AgentTrace.tsx",
+    "components/home/parts-b/agentScenarios.ts",
+    "components/home/parts-b/icons.tsx",
+    "components/home/parts-b/LeadForm.tsx",
+    "components/home/parts-b/leadRules.ts",
+    "app/api/lead/route.ts",
+    "lib/supabase/server.ts",
+    "supabase/migrations/0001_leads.sql",
+    "supabase/README.md",
+    ".env.example"
+  ],
+  "api": "export function Agents(): JSX.Element  // <section id=\"agentes\">\nexport function Contact(): JSX.Element // <section id=\"contato\">\nexport function AgentRun(): JSX.Element (client) — lab overrides read in effects: ?scenario=0|1|2 and ?run=<seconds> freeze the run for screenshots\nexport function LeadForm(): JSX.Element (client) — POST /api/lead { source:\"site\", name, contact, interests:string[], message, company }\nleadRules.ts: INTERESTS = [\"Site\",\"Web app\",\"Agente de IA\",\"Automação\"], LIMITS, isEmail, isPhone, isValidContact, validateLead(fields) → pt-BR errors\nlib/supabase/server.ts: supabaseAdmin(): SupabaseClient | null (null when SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY are missing); type LeadRow\nPOST /api/lead → 200 {ok:true, stored:true|false} | 200 {ok:true} (honeypot) | 400 invalid_json | 413 payload_too_large | 415 unsupported_media_type | 422 {ok:false, error:\"invalid\", fields:[...]} | 500 storage_failed | 503 not_configured (production without env); other methods → 405",
+  "verified": [
+    "curl against http://localhost:3000/api/lead (no Supabase env, development): valid site lead → 200 {ok:true, stored:false} (lead logged to the server console); valid demo-imobiliaria lead (single interest) → 200 stored:false; invalid (short name, bad contact, unknown interest) → 422 with fields [name, contact, interests]; unknown source → 422; honeypot filled → 200 {ok:true}; 12 KB body → 413 (also with chunked transfer and no content-length); text/plain → 415; broken JSON → 400; GET → 405",
+    "Screenshots at 1440x900, read and judged: Agents mid-run (?run=6.5) and finished (?run=30); real-time autoplay with ?y (pulse travelling on the CRM edge, spinner, live clock); Contact headline and form",
+    "Screenshots at 390x844 (--mobile): panel header and tabs, graph, finished trace (Clínica), E-commerce mid-run, Contact headline and form; layout fixed after the first pass (trace gutter overflow, wrapping header, card chip)",
+    "Form states via --eval: inline validation errors (name and contact, red borders, pt-BR messages, a chip selected); network error banner (fetch stubbed to reject); sending state (disabled button with spinner, 'Enviando…'); success replaces the form with an animated check and 'Recebido, Ana!' (real POST to the dev endpoint)",
+    "shot.mjs reported no page JavaScript errors on any run, including one of the home page / scrolled to #agentes",
+    "npx tsc --noEmit filtered to my paths: no output; npx eslint on all my files: clean"
+  ],
+  "issues": [
+    "TODO for the owner: 'Falar no WhatsApp' and 'Enviar e-mail' in Contact.tsx have href=\"#\" with TODO comments. The real WhatsApp number (wa.me link) and contact e-mail have not been provided yet. The form's error message also points people to WhatsApp.",
+    "Supabase is not configured here, so a real insert (stored:true) and the production 503 not_configured branch were not exercised. Only the dev 'no env' path was tested.",
+    "Rate limiting is not implemented. There is a comment in route.ts and a note in supabase/README.md pointing to a Vercel Firewall rule or Upstash.",
+    "Reduced-motion behaviour (no autoplay, finished run, instant tab switch, no shimmer or ripple) is coded but not checked in a screenshot, because shot.mjs has no reduced-motion emulation.",
+    "lib/supabase/server.ts guards against the browser with a runtime typeof-window throw instead of `import \"server-only\"`, because that package is not installed (no new dependencies). Adding server-only would give a build-time guarantee.",
+    "Shared observation (not changed): with Unbounded, the global `text-outline-acc` / `text-outline` utilities show the font's internal overlapping contours as stray lines inside glyphs (e.g. the 'e' of 'seu'). In Contact I avoided it with fill = bg color + a thicker stroke + `paint-order: stroke fill`. The same fix could go into globals.css for the hero's outlined 'Agentes'.",
+    "The agent panel's keyframes (mhb-*) live in a React-hoisted <style> inside my components, since I can't edit globals.css.",
+    "I did not view the Instagram reel from the user's request (it is behind a login and not reachable from here). The design follows the mock and docs/design-system.md."
+  ]
+}

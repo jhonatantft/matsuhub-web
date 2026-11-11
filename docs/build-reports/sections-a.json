@@ -1,0 +1,33 @@
+{
+  "summary": "I built the four homepage sections in my part, and each one goes clearly past the mock. Marquee: a big display band alternating outlined and solid lime words, over a small mono row of the tech stack moving the other way. It speeds up and skews with scroll velocity, follows the scroll direction, loops seamlessly, pauses off screen and causes no layout shift. Services: a 7/5/5/7 bento (stacked on mobile) with a large outlined index number, cursor spotlight, damped 3D tilt toward the pointer on desktop, a conic border beam on hover, and tags as chips. Each card has its own living illustration driven by the shared ticker: an agent node graph with packets going out to and back from 4 tools, a dashboard with a live line chart, bars, KPIs and a donut, a CSS-3D exploded stack of page layers that turns slowly and spreads apart on hover, and an order automation flow with a signal running through CRM, payment, ERP and WhatsApp. The illustrations burst to life on entering the view, settle to a calm idle and speed up on hover. Segments: four cards with \"em breve\" chips, each with an animated SVG hologram (scanlines, sweep, glow) for clinic, restaurant, e-commerce and law. Desktop shows them as a grid; mobile scrolls them sideways with snap. Process: a lime-to-mint line with a glowing head that draws itself with scroll, horizontal on desktop and vertical on mobile, lighting each step as it reaches it, each with a mono index and deliverable chips.",
+  "files": [
+    "components/home/Marquee.tsx",
+    "components/home/Services.tsx",
+    "components/home/Segments.tsx",
+    "components/home/Process.tsx",
+    "components/home/parts-a/live.ts",
+    "components/home/parts-a/ServiceCard.tsx",
+    "components/home/parts-a/AgentGraph.tsx",
+    "components/home/parts-a/DashboardViz.tsx",
+    "components/home/parts-a/SiteStack.tsx",
+    "components/home/parts-a/FlowViz.tsx",
+    "components/home/parts-a/SegmentVignettes.tsx",
+    "components/home/parts-a/LiveOnView.tsx",
+    "components/home/parts-a/ProcessLine.tsx"
+  ],
+  "api": "Marquee(), Services() (section#servicos), Segments(), Process() (section#processo): no props, same exported names. Helpers in parts-a: startLive(el, draw:(s:{clock,energy,intro})=>void, opts?) => cleanup (reads hover from the closest [data-live-host][data-hover=\"true\"]); samplePath(path, count) / pointAt(samples, t, out); ServiceCard({index,title,text,tags,caption,children}); LiveOnView({as,className,...}) sets data-live while on screen.",
+  "verified": [
+    "Screenshots at 1440x900 of /lab/sections-a: marquee, both bento rows (including hover on card 2 and card 3 sent with --eval pointer events: tilt, beam, spotlight, 3D stack spreading apart), segments grid, and the process line partly drawn with steps 1–3 lit. All reviewed and look premium.",
+    "Mobile (--mobile 390x844) screenshots at 6 scroll offsets: marquee, stacked bento, segments sideways scroll, vertical process timeline lighting up. No overflow seen.",
+    "scripts/shot.mjs printed no page JavaScript or console errors on any run.",
+    "npx tsc --noEmit filtered to my paths prints nothing; npx eslint on all my files is clean."
+  ],
+  "issues": [
+    "Styles live in React 19 hoisted <style href=... precedence=...> blocks inside my components, with class prefix sa-, rather than in globals.css (I may not edit it). I avoided CSS modules because next.config's turbopack '*.css' rule renames everything to plain .css, which might break module scoping.",
+    "Copy I added in my own files: the Segments heading 'Os próximos demos já estão na bancada.' and lead, the Process lead 'Quatro etapas, cada uma com uma entrega que você vê e usa.', the deliverable chips for each step, the card captions, and the extra marquee stack words (Supabase, Three.js, OpenAI, Claude, Vercel, n8n, Postgres). The illustrations show decorative UI numbers (+24%, 'mesa 07', '4 sistemas'), which are not presented as real statistics. Move any of it to content/site.ts if you want the copy in one place.",
+    "Reduced motion: I did not screenshot it. By code, the illustrations draw one still frame, the marquee and card tilt are off, and the process line jumps straight to its scroll position instead of easing. Segments rely on the global reduced-motion CSS rule plus static fallbacks for the documents.",
+    "Process line on mobile: on the lab page it does not reach step 4 because the page ends. On the full homepage, which has content below, it should.",
+    "On mobile the automation flow illustration is drawn fairly small (it scales to the card width); it is readable but not large.",
+    "Not checked in the full homepage composition (only on /lab/sections-a), and not checked on real touch hardware."
+  ]
+}

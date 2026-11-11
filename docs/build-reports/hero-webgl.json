@@ -1,0 +1,39 @@
+{
+  "summary": "Rebuilt the hero \"hub\" as a WebGL scene (plain three.js 0.187) in components/three/hub: a GPU particle shell (120k / 60k / 25k points by tier) whose points slide along a breathing noise surface and bunch into drifting filaments, nested counter-rotating core membranes around a hot nucleus, three thin tilted orbit rings with light pulses and beads, sparse depth-of-field dust, and 12-16 instanced comet \"agents\" with tapered ribbon trails that fly lifted great-circle arcs between 28 nodes; each landing flashes the node and sends a ripple of light and height across the shell through a uniform array of pulse origins and times. Everything per-particle (flow, ripples, the 2.2 s swirling intro, scroll scatter that streams outward and down the page, pointer force field, depth of field) runs in the vertex shader, and the agents' timetable is a pure function of the ticker time, so ?t= frames are deterministic. Light is summed in a half-float buffer, bloomed with UnrealBloomPass (sized relative to CSS pixels, with my own box-filter bright-pass, and its composite sampled by the output pass instead of an extra full-screen blend), then ACES tone-mapped, dithered and written with an alpha derived from the light so the canvas stays transparent over the page grid. Composition follows the brief (72% / 52% with a lens shift so the hub stays round, 50% / 36% and dimmed to 55% below 900 px), reduced motion shows one static frame that is only redrawn on resize or scroll, and an adaptive governor steps quality down only when the scene itself is what is slow. The inspiration reel could not be opened (Instagram login wall), so the design follows the approved mock and the brief.",
+  "files": [
+    "components/three/hub/HubScene.tsx",
+    "components/three/hub/engine.ts",
+    "components/three/hub/shaders.ts",
+    "components/three/hub/geometry.ts",
+    "components/three/hub/agents.ts"
+  ],
+  "api": "Public (unchanged contract): `export default function HubScene({ className }: { className?: string })` in components/three/hub/HubScene.tsx - client component, fills its positioned parent, aria-hidden, pointer-events none; it creates its own <canvas> inside its root div.\n\nInternal: `mountHub(container: HTMLElement): () => void` in components/three/hub/engine.ts (builds the scene on the shared ticker, returns dispose; does nothing if WebGL 2 is unavailable).\n\nLab-only URL params read through labParam (in addition to ?t= and ?y=): `?q=0|1|2` forces the low | mid | high tier, `?still=1` shows the reduced-motion frame. Example: /lab/hub?t=6&q=0.",
+  "verified": [
+    "Screenshots read and judged at 1440x900 with scripts/shot.mjs: /lab/hub (live), ?t=0.5 (scattered cloud mid-intro), ?t=6, --y 500 (scatter, particles sink and dissolve before the hero's bottom edge), --mobile (390x844); no page errors printed on the final runs. Kept in .shots/hub-*.png",
+    "Extra frames viewed: intro sequence t=0.12..2.2 (contact sheet .shots/hub-intro-sheet.png), six later times up to t=19.5, a ripple sequence after a strong landing (ring of light visibly crosses the shell), home page / and / --y 450 (stream ends above the marquee)",
+    "Other viewports viewed: 900x700, 1024x768, 1100x760, 2560x1080, 768x1024; tiers viewed with ?q=0 (25k, mobile) and ?q=1 (60k, desktop); 8-bit no-bloom fallback path viewed by temporarily forcing it",
+    "True retina render checked with a scratchpad copy of the shot script at deviceScaleFactor 2 (.shots/hub-t8-2x.png, 2880x1800) and cropped 1:1",
+    "Pointer: dispatched a pointermove over the hub in a ?t=6 frame - hub leans toward it and a force-field dimple with a bright rim opens under the ray (.shots/hub-force.png)",
+    "Reduced motion with real media emulation: static frame, 0 composer renders during a 1 s window; toggling the preference while the page is open remounts cleanly (1 canvas before / after / back, no errors)",
+    "Render gating measured by counting composer.render calls: 60/s visible, 60/s half scrolled, 0/s with the hero off screen, 60/s after scrolling back",
+    "Context loss: WEBGL_lose_context loseContext -> 0 renders, restoreContext -> rendering resumes with a correct frame, no errors",
+    "StrictMode: confirmed mount -> dispose -> mount happens in dev and exactly one canvas remains",
+    "Performance on Apple M3 Pro (ANGLE Metal) while the machine was under heavy load from other agents: rAF pacing 60 fps, median 16.7 ms, p95 16.7-16.8 ms, max 16.8 ms at 1440x900 DPR 1 and with a real 2880x1800 buffer (DPR 2); GPU timer queries mid-way through the work gave about 2.2 ms per frame at DPR 1 and 4.0 ms at DPR 2 after the bloom rework (9.4 ms before it)",
+    "Adaptive governor tested: with a busy main thread (34 ms per frame regardless of the hub) the buffer stayed at 1440 px; with hub draw calls artificially slowed the buffer stepped 1440 -> 1152 -> 1080, then particles were halved and bloom dropped, and the result still looked acceptable",
+    "Resize: changed the hero's width and height at runtime, canvas and composition followed (wide and narrow layouts)",
+    "Shadow-boosted crop checked for banding and haze: gradients are smooth and the page grid shows through the canvas",
+    "npx tsc --noEmit | grep components/three/hub prints nothing; npx eslint on the five files is clean; temporary debug hooks and logs removed (grep confirms)"
+  ],
+  "issues": [
+    "The Instagram reel from the user request was not viewed: the page returns only a login wall to an automated fetch. The scene was designed from mock/index.html and the brief.",
+    "Only verified in headless Chrome on an Apple M3 Pro. Not tested on Safari, Firefox, Windows GPUs or real phones. The 60 fps figure is for this machine; weaker laptop GPUs depend on the adaptive governor, which I could only test with emulated slowness.",
+    "lib/env quality() will very likely put every iPhone in the 'low' tier (WebKit reports hardwareConcurrency 4 for devices with fewer than 8 cores), so iPhones get 25k particles at DPR 1.25. The low tier looks good in emulation (?q=0) but this was not checked on a device; a shared change in lib/env (for example treating recent iOS as 'mid') is worth considering.",
+    "Between 900 and about 1100 px wide the brief's 72% centre makes the hub share space with the end of the headline and paragraph. I dim the hub's text side progressively there (and nodes, comets, rings), but the composition is tight at exactly 900 px; ring beads can still pass behind a word of the paragraph.",
+    "During the scroll scatter, dimmed particles drift behind the paragraph and buttons for a moment.",
+    "One DOMRect is allocated per frame by getBoundingClientRect (the brief asks for scroll progress from the canvas rect); nothing else allocates in the loop.",
+    "The bloom setup relies on three 0.187 internals of UnrealBloomPass (materialHighPassFilter, blendMaterial, renderTargetsHorizontal[0]); a three upgrade should re-check them.",
+    "Time is passed to shaders as a 32-bit float since mount, so motion would get slightly steppy only after a tab has been open for many hours.",
+    "scripts/shot.mjs (not mine) sometimes exits with ENOTEMPTY in its final rmSync after the PNG is already written, when several runs overlap; adding maxRetries to that rmSync would fix it.",
+    "The dev server returned 500 for every page for about a minute while another agent's components/aurora/shaders.ts was mid-edit; it recovered on its own and is unrelated to my files."
+  ]
+}

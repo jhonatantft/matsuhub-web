@@ -1,0 +1,275 @@
+@import "tailwindcss";
+
+/* ───────────── Design tokens ─────────────
+   Dark, holographic, lime/mint on near-black. See docs/design-system.md. */
+@theme inline {
+  --font-display: var(--font-unbounded), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, SFMono-Regular, Menlo, monospace;
+  /* Serif used only by the "Aurora" real-estate demo, so it reads as a different brand. */
+  --font-aurora: var(--font-fraunces), ui-serif, Georgia, serif;
+  /* Serif used only by the "Maré" restaurant demo. */
+  --font-mare: var(--font-cormorant), ui-serif, Georgia, serif;
+  /* Geometric sans used only by the "Pulso" online-store demo. */
+  --font-pulso: var(--font-sora), ui-sans-serif, system-ui, sans-serif;
+}
+
+@theme {
+  --color-bg: #050807;
+  --color-bg-2: #0a0f0d;
+  --color-bg-3: #111916;
+  --color-ink: #eef4ee;
+  --color-mute: #8d9a92;
+  --color-dim: #5b6760;
+  --color-line: rgb(190 255 215 / 0.12);
+  --color-line-2: rgb(190 255 215 / 0.24);
+  --color-acc: #b9ff4b;
+  --color-acc-2: #3ef2c4;
+  --color-warm: #ffd08a;
+  --color-danger: #ff7a6b;
+
+  /* "Aurora" demo sub-brand: deep navy + warm gold (matches the generated imagery) */
+  --color-au-bg: #070b1a;
+  --color-au-bg-2: #0d1430;
+  --color-au-ink: #f5f0e6;
+  --color-au-mute: #a8a79f;
+  --color-au-gold: #e7c58a;
+  --color-au-line: rgb(231 197 138 / 0.22);
+
+  /* "Maré" demo sub-brand (the sample restaurant site): warm charcoal + ember */
+  --color-ma-bg: #0f0c0a;
+  --color-ma-bg-2: #1a1410;
+  --color-ma-ink: #f4eadd;
+  --color-ma-mute: #a99c8d;
+  --color-ma-ember: #f08a4b;
+  --color-ma-line: rgb(240 138 75 / 0.22);
+
+  /* "Pulso" demo sub-brand (the sample online store): bright lab white + electric violet */
+  --color-pu-bg: #f2f3f6;
+  --color-pu-bg-2: #ffffff;
+  --color-pu-ink: #0c0d12;
+  --color-pu-mute: #5d6270;
+  --color-pu-acc: #5b4bff;
+  --color-pu-acc-2: #00c8f0;
+  --color-pu-line: rgb(12 13 18 / 0.1);
+
+  --ease-soft: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-inout: cubic-bezier(0.65, 0, 0.35, 1);
+
+  --radius-card: 20px;
+  --radius-panel: 22px;
+
+  --animate-blink: blink 1.6s ease-in-out infinite;
+  --animate-marquee: marquee 32s linear infinite;
+  --animate-spin-slow: spin 9s linear infinite;
+
+  @keyframes blink {
+    50% { opacity: 0.25; }
+  }
+  @keyframes marquee {
+    to { transform: translateX(-50%); }
+  }
+}
+
+:root {
+  --pad: clamp(20px, 5vw, 72px);
+  --nav-h: 68px;
+}
+
+@layer base {
+  html {
+    background: var(--color-bg);
+    color-scheme: dark;
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    min-height: 100svh;
+    background: var(--color-bg);
+    color: var(--color-ink);
+    font-size: 17px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: clip;
+  }
+  ::selection {
+    background: var(--color-acc);
+    color: #050807;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-acc);
+    outline-offset: 3px;
+  }
+  h1, h2, h3, h4 { text-wrap: balance; }
+  p { text-wrap: pretty; }
+}
+
+/* ───────────── Type & surface utilities ───────────── */
+@utility label {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-acc);
+}
+@utility h-hero {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(34px, 6vw, 96px);
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+@utility h-section {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(26px, 4.2vw, 60px);
+  line-height: 1.06;
+  letter-spacing: -0.035em;
+}
+@utility h-card {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(19px, 1.9vw, 26px);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+/* Outlined type: a bg fill painted over the inner half of the stroke hides the overlapping
+   contours inside the Unbounded glyphs. */
+@utility text-outline {
+  color: var(--color-bg);
+  -webkit-text-stroke: 3px var(--color-ink);
+  paint-order: stroke fill;
+}
+@utility text-outline-acc {
+  color: var(--color-bg);
+  -webkit-text-stroke: 3px var(--color-acc);
+  paint-order: stroke fill;
+}
+@utility text-gradient {
+  background: linear-gradient(90deg, var(--color-acc), var(--color-acc-2));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+@utility card {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
+  background: linear-gradient(180deg, rgb(255 255 255 / 0.035), rgb(255 255 255 / 0.008));
+}
+@utility glass {
+  border: 1px solid var(--color-line);
+  background: rgb(6 14 10 / 0.74);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+}
+@utility chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border: 1px solid var(--color-line);
+  border-radius: 999px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--color-mute);
+}
+
+@layer components {
+  /* Buttons (use <Button> from components/ui/Button) */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 13px 22px;
+    border: 1px solid var(--color-line-2);
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1;
+    white-space: nowrap;
+    color: var(--color-ink);
+    cursor: pointer;
+    transition: transform 0.25s var(--ease-soft), border-color 0.2s, color 0.2s, box-shadow 0.3s, background-color 0.2s;
+  }
+  .btn-primary {
+    border-color: var(--color-acc);
+    background: var(--color-acc);
+    color: #061006;
+  }
+  .btn-primary:hover { box-shadow: 0 0 44px 2px rgb(185 255 75 / 0.45); }
+  .btn-ghost:hover { border-color: var(--color-acc); color: var(--color-acc); }
+  .btn-sm { padding: 9px 16px; font-size: 13px; }
+  .btn-arrow { transition: transform 0.25s var(--ease-soft); }
+  .btn:hover .btn-arrow { transform: translateX(4px); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* Headline lines sliding up from a mask (hero) */
+  .line-mask {
+    display: block;
+    overflow: hidden;
+    padding-bottom: 0.14em;
+    margin-bottom: -0.14em;
+  }
+  .line-mask > span {
+    display: inline-block;
+    transform: translateY(115%);
+    animation: line-up 1s var(--ease-soft) forwards;
+    animation-delay: calc(var(--i, 0) * 0.1s + 0.15s);
+  }
+
+  /* Ambient layers behind/above the whole site */
+  .ambient-grid {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0.4;
+    background:
+      linear-gradient(var(--color-line) 1px, transparent 1px) 0 0 / 100% 80px,
+      linear-gradient(90deg, var(--color-line) 1px, transparent 1px) 0 0 / 80px 100%;
+    -webkit-mask-image: radial-gradient(ellipse at 50% 0, #000, transparent 75%);
+    mask-image: radial-gradient(ellipse at 50% 0, #000, transparent 75%);
+  }
+  .ambient-grain {
+    position: fixed;
+    inset: 0;
+    z-index: 90;
+    pointer-events: none;
+    opacity: 0.07;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+}
+
+@keyframes line-up {
+  to { transform: none; }
+}
+
+/* ───────────── Scroll reveal (see components/ui/Reveal) ───────────── */
+[data-reveal] {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.8s var(--ease-soft), transform 0.8s var(--ease-soft);
+  transition-delay: var(--reveal-delay, 0s);
+}
+[data-reveal][data-in="true"] {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  [data-reveal] { opacity: 1; transform: none; }
+  .line-mask > span { transform: none; animation: none; }
+}

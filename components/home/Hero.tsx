@@ -1,0 +1,56 @@
+import { Button } from "@/components/ui/Button";
+import { Label } from "@/components/ui/Label";
+import { Magnetic } from "@/components/ui/Magnetic";
+import { Reveal } from "@/components/ui/Reveal";
+import { SITE } from "@/content/site";
+import { HeroScene } from "./HeroScene";
+
+const line = (i: number) => ({ "--i": i }) as React.CSSProperties;
+
+export function Hero() {
+  return (
+    <header className="relative flex min-h-svh flex-col justify-center overflow-hidden px-[var(--pad)] pt-[120px] pb-[90px]">
+      <HeroScene />
+
+      <div className="relative z-[2]">
+        <Reveal>
+          <Label dot>{SITE.tagline}</Label>
+        </Reveal>
+
+        <h1 className="h-hero mt-[26px] mb-7">
+          <span className="line-mask" style={line(0)}>
+            <span>Software</span>
+          </span>
+          <span className="line-mask" style={line(1)}>
+            <span>que pensa.</span>
+          </span>
+          <span className="line-mask" style={line(2)}>
+            <span className="text-outline">Agentes</span>
+          </span>
+          <span className="line-mask" style={line(3)}>
+            <span className="text-gradient">que trabalham.</span>
+          </span>
+        </h1>
+
+        <Reveal as="p" delay={0.5} className="max-w-[50ch] text-[clamp(16px,1.3vw,19px)] text-mute">
+          Criamos produtos web sob medida e agentes de IA que atendem, vendem e operam o seu negócio — 24 horas por
+          dia.
+        </Reveal>
+
+        <Reveal delay={0.65} className="mt-[34px] flex flex-wrap gap-3">
+          <Magnetic>
+            <Button href="/#contato">Iniciar projeto</Button>
+          </Magnetic>
+          <Button href="/#demos" variant="ghost" arrow="↓">
+            Ver demos
+          </Button>
+        </Reveal>
+      </div>
+
+      <div className="absolute inset-x-[var(--pad)] bottom-[26px] z-[2] flex justify-between font-mono text-[11px] font-medium tracking-[0.14em] text-mute uppercase">
+        <span>Role para explorar ↓</span>
+        <span className="hidden sm:inline">Web · IA · Agentes</span>
+      </div>
+    </header>
+  );
+}

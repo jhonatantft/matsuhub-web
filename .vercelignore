@@ -1,0 +1,9 @@
+# Not part of the deployed site. `sales/` holds private prospect notes — never upload it.
+sales
+brand
+mock
+docs/unused-media
+docs/build-reports
+scripts
+.claude
+.shots

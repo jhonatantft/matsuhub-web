@@ -1,0 +1,33 @@
+{
+  "fixed": [
+    "app/api/lead/route.ts:75 - the JSON-only check used a substring match (type.includes(\"application/json\")), so `Content-Type: text/plain; charset=application/json` got through. Proved with curl: it returned 200 {ok:true,stored:false}. text/plain is a CORS-simple type, so any third-party page could post leads cross-site with no preflight. Fix: compare only the media type itself (`split(\";\")[0].trim().toLowerCase() === \"application/json\"`). After the fix that request gets 415. `Application/JSON; charset=utf-8` and plain application/json still get 200.",
+    "next.config.ts - there were no security headers and the response carried X-Powered-By: Next.js (seen with curl -I /). Added poweredByHeader:false and a minimal headers() for /:path*: X-Content-Type-Options nosniff, Referrer-Policy strict-origin-when-cross-origin, X-Frame-Options SAMEORIGIN, and Permissions-Policy camera=(), microphone=(), geolocation=(), browsing-topics=(). I left out CSP and HSTS: CSP is risky for the WebGL, video and font setup, and Vercel already adds HSTS. I grepped the code: it uses no iframe, getUserMedia, geolocation or fullscreen. curl -I confirms the headers are now served. Home and /demos/imobiliarias render with no page errors in shot.mjs, and an in-page fetch to /api/lead from the home page still works."
+  ],
+  "left": [
+    "Not proven here: a NUL character (\\u0000) in name, contact or message passes validation and returns 200 in dev. Postgres text columns reject NUL (error 22P05), so with Supabase configured this would most likely come back as 500 storage_failed instead of 422. Supabase is not configured locally, so I could not show the failure and did not change it. The fix would be to reject /[\\u0000-\\u001f]/ in the zod base strings.",
+    "Cosmetic: a name made only of zero-width spaces (\"​​\") passes both client and server checks, because trim() does not remove U+200B. The lead still gets stored, so I left it.",
+    "No rate limiting (already a known issue in sections-b.json). Route comments and both READMEs point to a Vercel Firewall rule or Upstash.",
+    "The home page (/) has no <link rel=canonical> and no og:url, while /demos/imobiliarias has both. Putting alternates.canonical in the root layout would cascade to /lab pages, so the right place is app/(site)/page.tsx, which is outside my area. Not a functional failure.",
+    "lib/supabase/server.ts protects itself with a runtime typeof-window throw instead of `server-only`, because adding the package would be a new dependency (a known issue). I confirmed only app/api/lead/route.ts imports it, and no client chunk in .next/static contains supabase-js or SERVICE_ROLE.",
+    "Neither the real Supabase insert (stored:true) nor the production 503 not_configured branch could be run, because no env is set here."
+  ],
+  "rejected": [
+    "Logs leaking personal data: the full lead row is logged only when NODE_ENV !== production. In production the logs carry only error.message, the caught error, or a missing-env notice, never the row.",
+    "Service role key exposure: .env* is gitignored except .env.example, the key has no NEXT_PUBLIC_ prefix, and supabaseAdmin is imported only by the route. Errors to the client are generic codes (storage_failed, not_configured), and 422 returns only field names.",
+    "Extra fields (admin, id, created_at, __proto__): zod strips them and the row is built field by field. Result 200 with only the known columns.",
+    "Migration and RLS: RLS is enabled with no policies, so anon and authenticated roles can neither read nor write. gen_random_uuid() is built in (PG13+). The columns match LeadRow.",
+    "Client and server rules agree: both use leadRules (LIMITS, isValidContact). The client message check is untrimmed, which is stricter than the server, and the server's contactMin of 5 is always met by any contact that passes the email or phone rules.",
+    "Double submit: LeadForm returns early while status is sending and disables its button. SiteVisit disables its submit button while sending, and implicit (Enter) submission does nothing when the default button is disabled.",
+    "Body cap: both the content-length check and the streamed check work (20 KB → 413, also with chunked transfer).",
+    "Honeypot: a non-empty company returns 200 {ok:true} and stores nothing. A whitespace-only company counts as empty, which is fine.",
+    "robots.txt (Allow /, Disallow /lab/ and /api/, Sitemap URL) and sitemap.xml (/ and /demos/imobiliarias) are correct. The lab pages are noindex and call notFound() in production, as the README says.",
+    "Metadata: the titles, the description, the og/twitter tags and the opengraph-image (200 image/png, 1200x630) are correct. The demo page overrides OG with its own image.",
+    "README / supabase/README match the code: there are 3 env vars, dev without env answers {ok:true,stored:false}, production answers 503, and the curl example returns 200."
+  ],
+  "verified": [
+    "Status codes seen on POST /api/lead: valid site lead 200 {ok:true,stored:false}; valid demo-imobiliaria lead 200; wrong types 422 fields [name,contact,message,interests]; unknown interest 422 [interests]; missing source 422 [source]; non-JSON 'abc' 400; '[1]' / 'null' / empty body 400 invalid_json; missing content-type 415; text/plain with an application/json parameter was 200 before the fix and 415 after; honeypot 200 {ok:true}; unicode (José Ñandú 日本, josé@exemplo.com.br, emoji) 200; extra fields 200 (stripped); 20 KB body 413, also chunked; GET 405; OPTIONS 204 Allow: OPTIONS, POST",
+    "curl -I / now returns nosniff, Referrer-Policy, X-Frame-Options and Permissions-Policy, and no longer returns X-Powered-By",
+    "npx tsc --noEmit: exit 0, no output. npx eslint on app/api, next.config.ts, lib/supabase, leadRules.ts, LeadForm.tsx, sitemap.ts, robots.ts, layout.tsx and opengraph-image.tsx: clean",
+    "shot.mjs on / and /demos/imobiliarias after the change: renders, no page errors"
+  ]
+}
