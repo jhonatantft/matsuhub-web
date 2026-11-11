@@ -18,6 +18,17 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  // One canonical host: the bare domain sends visitors (and search engines) to www.
+  async redirects() {
+    return [
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "matsuhub.com" }],
+        destination: "https://www.matsuhub.com/:path*",
+        permanent: true,
+      },
+    ];
+  },
   partialPrefetching: true,
   turbopack: {
     rules: {
