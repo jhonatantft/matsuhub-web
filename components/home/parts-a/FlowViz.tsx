@@ -1,16 +1,18 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { dict, type Lang } from "@/lib/i18n";
 import { fract, pointAt, samplePath, startLive } from "./live";
 
 const W = 84;
 const H = 34;
+/** Node positions; their labels come from the dictionary (serviceViz.flow), in the same order. */
 const NODES = [
-  { id: "in", label: "Novo pedido", sub: "webhook", x: 58, y: 128 },
-  { id: "crm", label: "CRM", sub: "lead.criar", x: 176, y: 128 },
-  { id: "pay", label: "Pagamento", sub: "pix.confirmar", x: 300, y: 68 },
-  { id: "erp", label: "ERP", sub: "estoque.baixar", x: 300, y: 188 },
-  { id: "out", label: "WhatsApp", sub: "cliente.avisar", x: 424, y: 128 },
+  { id: "in", x: 58, y: 128 },
+  { id: "crm", x: 176, y: 128 },
+  { id: "pay", x: 300, y: 68 },
+  { id: "erp", x: 300, y: 188 },
+  { id: "out", x: 424, y: 128 },
 ];
 const LINKS: [number, number][] = [
   [0, 1],
@@ -39,7 +41,8 @@ const link = ([a, b]: [number, number]) => {
 };
 
 /** Automação: an order flowing through CRM, payment and ERP until the customer is notified. */
-export function FlowViz() {
+export function FlowViz({ lang = "pt" }: { lang?: Lang }) {
+  const viz = dict(lang).serviceViz;
   const ref = useRef<SVGSVGElement>(null);
 
   useEffect(() => {
@@ -123,10 +126,10 @@ export function FlowViz() {
           <rect className="b" x={-W / 2} y={-H / 2} width={W} height={H} rx="10" fill="#0a130e" strokeWidth="1" />
           <circle className="d" cx={-W / 2 + 12} cy="0" r="3.2" fill={i === 4 ? "#3ef2c4" : "#b9ff4b"} />
           <text x={-W / 2 + 21} y="-2" fill="#eef4ee" fontSize="9.5" fontFamily="var(--font-sans)" fontWeight="700">
-            {n.label}
+            {viz.flow[i].label}
           </text>
           <text x={-W / 2 + 21} y="9" fill="#5b6760" fontSize="7" fontFamily="var(--font-mono)">
-            {n.sub}
+            {viz.flow[i].sub}
           </text>
         </g>
       ))}
@@ -141,7 +144,7 @@ export function FlowViz() {
       <g data-log style={{ opacity: 0 }} transform="translate(241 236)">
         <rect x="-96" y="-11" width="192" height="20" rx="10" fill="rgb(185 255 75 / .1)" stroke="rgb(185 255 75 / .4)" />
         <text x="0" y="3" textAnchor="middle" fill="#b9ff4b" fontSize="8.5" fontFamily="var(--font-mono)">
-          ✓ pedido sincronizado em 4 sistemas
+          {viz.flowDone}
         </text>
       </g>
     </svg>

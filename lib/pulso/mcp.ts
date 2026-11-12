@@ -40,6 +40,40 @@ export const httpError = (status: number, code: number, message: string): Reply 
 
 const isObj = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null && !Array.isArray(v);
 
+/* ── Rate-limit hooks (used by app/api/mcp/route.ts) ── */
+
+/** Tools that mint or change checkout state: limited more strictly than the read-only ones. */
+export const CHECKOUT_TOOLS: ReadonlySet<string> = new Set(["create_checkout", "update_checkout", "complete_checkout", "cancel_checkout"]);
+
+/**
+ * JSON-RPC error code for "rate limited". MCP 2026-07-28 (basic § Error Codes) defines none,
+ * reserves -32020…-32099 for the spec, discourages -32000…-32019 for new code, and says new codes
+ * SHOULD live outside JSON-RPC's reserved -32768…-32000. Hence an application code; the "429"
+ * suffix mirrors the HTTP status. Clients should key on HTTP 429 + Retry-After.
+ */
+export const RATE_LIMITED = -31429;
+
+/** What a limiter needs from a parsed message: its id (if usable) and the tool name of a tools/call. */
+export function peek(msg: unknown): { id: Id | null; tool: string | null } {
+  if (!isObj(msg)) return { id: null, tool: null };
+  const id = msg.id;
+  const validId = (typeof id === "string" && id.length <= 200) || (typeof id === "number" && Number.isInteger(id)) ? (id as Id) : null;
+  const tool = msg.method === "tools/call" && isObj(msg.params) && typeof msg.params.name === "string" ? msg.params.name : null;
+  return { id: validId, tool };
+}
+
+/** HTTP 429 + Retry-After with a JSON-RPC error that echoes the request id when there is one. */
+export const rateLimitedReply = (id: Id | null, retryAfter: number, scope: "requests" | "checkout"): Reply => ({
+  status: 429,
+  body: err(
+    id,
+    RATE_LIMITED,
+    `Rate limit excedido (${scope === "checkout" ? "ferramentas de checkout" : "requisições"} por IP). Tente de novo em ${retryAfter} s.`,
+    { retryAfterSeconds: retryAfter, scope },
+  ),
+  headers: { "Retry-After": String(retryAfter) },
+});
+
 const decodeHeader = (v: string) => {
   const m = v.match(/^=\?base64\?([A-Za-z0-9+/=]*)\?=$/);
   if (!m) return v;

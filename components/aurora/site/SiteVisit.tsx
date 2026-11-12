@@ -1,14 +1,14 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState } from "react";
-import { validateLead, type LeadErrors } from "@/components/home/parts-b/leadRules";
+import { useEffect, useRef, useState } from "react";
+import { RATE_LIMITED_MESSAGE, elapsedSince, validateLead, type LeadErrors } from "@/components/home/parts-b/leadRules";
 import { AURORA, AURORA_ROOMS, AURORA_TYPES, AURORA_UNITS } from "@/content/aurora";
 import { cn } from "@/lib/cn";
 import { onSite, SECTION } from "./bus";
 import { SiteHeading, SiteSection } from "./SiteSection";
 
-type Status = "idle" | "sending" | "sent" | "error";
+type Status = "idle" | "sending" | "sent" | "error" | "limited";
 
 const OPTIONS = AURORA_UNITS.filter((u) => u.status !== "vendida")
   .sort((a, b) => b.floor - a.floor)
@@ -29,6 +29,26 @@ export function SiteVisit() {
   const [company, setCompany] = useState("");
   const [errors, setErrors] = useState<LeadErrors>({});
   const [status, setStatus] = useState<Status>("idle");
+  const formRef = useRef<HTMLFormElement>(null);
+  // performance.now() when the form was first seen or touched (0 = not yet) → elapsedMs
+  const startedAt = useRef(0);
+  const markStart = () => {
+    if (!startedAt.current) startedAt.current = performance.now();
+  };
+  const showForm = status !== "sent";
+
+  useEffect(() => {
+    const el = formRef.current;
+    if (!showForm || !el || startedAt.current) return;
+    const io = new IntersectionObserver((entries) => {
+      if (entries.some((e) => e.isIntersecting)) {
+        if (!startedAt.current) startedAt.current = performance.now();
+        io.disconnect();
+      }
+    });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [showForm]);
 
   // prefilled by the explorer (unit) and by Lia (visit time)
   useEffect(() => {
@@ -62,11 +82,16 @@ export function SiteVisit() {
           interest: interest || undefined,
           message: message.trim(),
           company,
+          elapsedMs: elapsedSince(startedAt.current),
         }),
       });
       const body = (await res.json().catch(() => null)) as { ok?: boolean; fields?: string[] } | null;
       if (res.ok && body?.ok) {
         setStatus("sent");
+        return;
+      }
+      if (res.status === 429) {
+        setStatus("limited");
         return;
       }
       if (res.status === 422 && body?.fields?.includes("contact")) {
@@ -109,6 +134,7 @@ export function SiteVisit() {
               <button
                 type="button"
                 onClick={() => {
+                  startedAt.current = performance.now();
                   setStatus("idle");
                   setMessage("");
                 }}
@@ -119,7 +145,9 @@ export function SiteVisit() {
             </div>
           ) : (
             <form
+              ref={formRef}
               noValidate
+              onFocusCapture={markStart}
               onSubmit={(event) => {
                 event.preventDefault();
                 void submit();
@@ -199,6 +227,11 @@ export function SiteVisit() {
                   Não conseguimos enviar agora. Seus dados continuam aqui — verifique a conexão e toque em “Tentar novamente”.
                 </p>
               )}
+              {status === "limited" && (
+                <p role="alert" className="border border-[#e58a7a]/50 px-4 py-3 text-[13.5px] leading-snug text-[#f0b2a6]">
+                  {RATE_LIMITED_MESSAGE}
+                </p>
+              )}
 
               <div className="flex flex-wrap items-center gap-5">
                 <button
@@ -206,7 +239,7 @@ export function SiteVisit() {
                   disabled={status === "sending"}
                   className="group flex items-center gap-4 bg-au-ink px-7 py-4.5 text-[10.5px] leading-none font-bold tracking-[0.24em] text-au-bg uppercase transition-colors hover:bg-au-gold disabled:opacity-60"
                 >
-                  {status === "sending" ? "Enviando…" : status === "error" ? "Tentar novamente" : "Agendar visita"}
+                  {status === "sending" ? "Enviando…" : status === "error" || status === "limited" ? "Tentar novamente" : "Agendar visita"}
                   <span aria-hidden className="transition-transform duration-300 group-hover:translate-x-1">
                     →
                   </span>

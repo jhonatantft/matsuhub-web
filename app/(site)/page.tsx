@@ -1,21 +1,8 @@
-import { Agents } from "@/components/home/Agents";
-import { Contact } from "@/components/home/Contact";
-import { DemoShowcase } from "@/components/home/DemoShowcase";
-import { Hero } from "@/components/home/Hero";
-import { Marquee } from "@/components/home/Marquee";
-import { Process } from "@/components/home/Process";
-import { Services } from "@/components/home/Services";
+import { HomePage } from "@/components/home/HomePage";
+import { pageMetadata } from "@/lib/i18n/metadata";
 
-export default function HomePage() {
-  return (
-    <>
-      <Hero />
-      <Marquee />
-      <Services />
-      <DemoShowcase />
-      <Agents />
-      <Process />
-      <Contact />
-    </>
-  );
+export const metadata = pageMetadata("home", "pt");
+
+export default function Page() {
+  return <HomePage lang="pt" />;
 }

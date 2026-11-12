@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRef, useState } from "react";
 import { Button } from "@/components/ui/Button";
-import { AURORA, AURORA_SHOWCASE_STEPS } from "@/content/aurora";
+import { AURORA, AURORA_SHOWCASE_STEPS, AURORA_SHOWCASE_STEPS_EN } from "@/content/aurora";
 import { cn } from "@/lib/cn";
 import { reducedMotion } from "@/lib/env";
 import { clamp, damp, lerp, seg, smoothstep } from "@/lib/math";
@@ -25,10 +25,34 @@ import { FACADE, isExterior, type AuroraView } from "../views";
  * Lia. Nothing is scripted after that point; scrolling back into the intro resets it.
  */
 
-const STEPS = AURORA_SHOWCASE_STEPS;
-const COUNT = STEPS.length;
+const STEPS_PT = AURORA_SHOWCASE_STEPS;
+const COUNT = STEPS_PT.length;
 const FEATURED = 18;
-const LIVE = STEPS[COUNT - 1].at;
+const LIVE = STEPS_PT[COUNT - 1].at;
+
+/** MatsuHub's own words around the window. The Aurora site inside it stays Portuguese, like the demo. */
+const COPY = {
+  pt: {
+    steps: STEPS_PT,
+    openFull: "Abrir o site completo",
+    openDemo: "Abrir o site-demo",
+    tag: "site-demo · imobiliária",
+    regionLive: "Site-demo Aurora Residence, interativo: escolha um andar, abra a planta e os ambientes.",
+    regionIntro: "Demonstração do site-demo Aurora Residence: do projeto ao prédio pronto, ao anoitecer.",
+    keys: "Tour: setas escolhem o andar, Enter entra, Esc volta",
+    building: "construindo",
+  },
+  en: {
+    steps: AURORA_SHOWCASE_STEPS_EN,
+    openFull: "Open the full site",
+    openDemo: "Open the demo site",
+    tag: "demo site · real estate",
+    regionLive: "Aurora Residence demo site, interactive: pick a floor, open the plan and the rooms. The demo itself is in Portuguese.",
+    regionIntro: "Aurora Residence demo site: from the drawing to the finished tower, at nightfall. The demo itself is in Portuguese.",
+    keys: "Tour: arrow keys pick a floor, Enter goes in, Esc goes back",
+    building: "building",
+  },
+} as const;
 
 /** Beats of the scroll intro (0..1 of the pinned timeline). */
 const T = {
@@ -53,7 +77,9 @@ const sameUi = (a: Ui, b: Ui) => a.step === b.step && a.chrome === b.chrome && a
 /** Progress bars start empty; the frame loop owns their transform from then on. */
 const EMPTY = { transform: "scaleX(0)" } as const;
 
-export function ShowcaseScene() {
+export function ShowcaseScene({ lang = "pt" }: { lang?: "pt" | "en" }) {
+  const copy = COPY[lang];
+  const STEPS = copy.steps;
   const [ui, setUi] = useState<Ui>(UI_START);
   const [wide, setWide] = useState(true);
   const [chat, setChat] = useState(false);
@@ -229,8 +255,8 @@ export function ShowcaseScene() {
             role="region"
             aria-label={
               ui.live
-                ? "Site-demo Aurora Residence, interativo: escolha um andar, abra a planta e os ambientes."
-                : "Demonstração do site-demo Aurora Residence: do projeto ao prédio pronto, ao anoitecer."
+                ? copy.regionLive
+                : copy.regionIntro
             }
             className="relative flex h-full w-full flex-col lg:h-[min(100cqh,calc(100cqw/1.22))]"
           >
@@ -257,12 +283,12 @@ export function ShowcaseScene() {
                   </svg>
                   <span className="truncate">{AURORA.domain}</span>
                 </span>
-                <span className="ml-auto hidden shrink-0 tracking-[0.06em] text-dim xl:inline">site-demo · imobiliária</span>
+                <span className="ml-auto hidden shrink-0 tracking-[0.06em] text-dim xl:inline">{copy.tag}</span>
                 <Link
                   href="/demos/imobiliarias"
                   className="group ml-auto flex h-7 shrink-0 items-center gap-1.5 rounded-full bg-acc px-3 font-sans text-[12px] font-bold whitespace-nowrap text-[#061006] transition-shadow duration-300 hover:shadow-[0_0_28px_rgb(185_255_75/0.5)] xl:ml-3 lg:h-[30px] lg:px-3.5 lg:text-[12.5px]"
                 >
-                  Abrir o site completo
+                  {copy.openFull}
                   <span aria-hidden className="transition-transform duration-300 ease-soft group-hover:translate-x-0.5 group-hover:-translate-y-0.5">
                     ↗
                   </span>
@@ -273,8 +299,9 @@ export function ShowcaseScene() {
                 ref={(el) => {
                   rootRef.current = el;
                 }}
+                lang="pt-BR"
                 tabIndex={ui.live ? 0 : -1}
-                aria-label={ui.live ? "Tour: setas escolhem o andar, Enter entra, Esc volta" : undefined}
+                aria-label={ui.live ? copy.keys : undefined}
                 onKeyDown={ui.live ? tour.onKeyDown : undefined}
                 className="@container relative min-h-0 flex-1 outline-none focus-visible:ring-1 focus-visible:ring-au-gold/60 focus-visible:ring-inset"
               >
@@ -333,7 +360,7 @@ export function ShowcaseScene() {
                       ))}
                       <div ref={tagRef} className="absolute top-0 right-0 opacity-0 transition-opacity duration-300 will-change-transform">
                         <span className="absolute right-4 bottom-2 flex items-center gap-2 whitespace-nowrap text-acc">
-                          <span className="@max-xl:hidden">construindo</span>
+                          <span className="@max-xl:hidden">{copy.building}</span>
                           <span ref={tagTextRef} className="bg-acc px-1.5 py-1 font-bold text-[#061006] tabular-nums">
                             00%
                           </span>
@@ -428,10 +455,10 @@ export function ShowcaseScene() {
                 </p>
                 <div inert={ui.step !== i} className="mt-3 lg:mt-7">
                   <Button href="/demos/imobiliarias" size="sm" className="max-lg:w-full lg:hidden">
-                    Abrir o site-demo
+                    {copy.openDemo}
                   </Button>
                   <Button href="/demos/imobiliarias" className="max-lg:hidden">
-                    Abrir o site-demo
+                    {copy.openDemo}
                   </Button>
                 </div>
               </li>

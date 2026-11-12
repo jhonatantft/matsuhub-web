@@ -3,8 +3,10 @@
 import Link from "next/link";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import type { DEMOS } from "@/content/site";
+import { dict, fill, type Lang } from "@/lib/i18n";
 
-type Demo = (typeof DEMOS)[number];
+/** One demo in one language (the server resolves the copy, so only that language reaches the client). */
+export type DemoCardData = Pick<(typeof DEMOS)[number], "href" | "preview"> & { segment: string; name: string; blurb: string; alt: string };
 type Connection = EventTarget & { saveData?: boolean; effectiveType?: string };
 
 const REDUCE = "(prefers-reduced-motion: reduce)";
@@ -38,7 +40,9 @@ function subscribe(onChange: () => void) {
  * only while the card is near the viewport and the tab is visible; under reduced motion or data
  * saving it stays on its poster and a small "▶ ver prévia" control (outside the link) plays it.
  */
-export function DemoCard({ demo, index }: { demo: Demo; index: number }) {
+export function DemoCard({ demo, index, lang = "pt" }: { demo: DemoCardData; index: number; lang?: Lang }) {
+  const d = dict(lang).demoCard;
+  const name = demo.name;
   const videoRef = useRef<HTMLVideoElement>(null);
   const rootRef = useRef<HTMLDivElement>(null);
   const startedRef = useRef(false);
@@ -91,10 +95,10 @@ export function DemoCard({ demo, index }: { demo: Demo; index: number }) {
     <div ref={rootRef} className="group relative h-full">
       <Link
         href={demo.href}
-        className="relative flex h-full flex-col overflow-hidden rounded-[var(--radius-panel,20px)] border border-line-2 bg-bg-2/90 transition-[border-color,translate,box-shadow] duration-500 ease-soft group-hover:-translate-y-1.5 group-hover:border-acc group-hover:shadow-[0_40px_90px_-40px_rgb(185_255_75/0.55)] focus-visible:border-acc"
+        className="relative flex h-full flex-col overflow-hidden rounded-[var(--radius-panel,20px)] border border-line-2 bg-bg-2/90 xl:flex-row transition-[border-color,translate,box-shadow] duration-500 ease-soft group-hover:-translate-y-1.5 group-hover:border-acc group-hover:shadow-[0_40px_90px_-40px_rgb(185_255_75/0.55)] focus-visible:border-acc"
       >
-        <span className="sr-only">{demo.image.alt}. </span>
-        <span aria-hidden className="block bg-bg-3">
+        <span className="sr-only">{demo.alt}. </span>
+        <span aria-hidden className="block bg-bg-3 xl:w-[58%] xl:shrink-0 xl:self-start xl:border-r xl:border-line">
           <span
             className="flex items-center gap-3 border-b border-line bg-[#0a0d0c] px-3"
             style={{ height: STRIP }}
@@ -109,7 +113,7 @@ export function DemoCard({ demo, index }: { demo: Demo; index: number }) {
             </span>
             <span className="ml-auto flex shrink-0 items-center gap-1.5 font-mono text-[9.5px] leading-none font-medium tracking-[0.14em] whitespace-nowrap text-acc uppercase">
               <i className="h-1.5 w-1.5 rounded-full bg-acc shadow-[0_0_8px_var(--color-acc)] motion-safe:animate-pulse" />
-              ao vivo · prévia
+              {d.live}
             </span>
           </span>
           <span className="relative block aspect-[16/10] overflow-hidden">
@@ -129,18 +133,18 @@ export function DemoCard({ demo, index }: { demo: Demo; index: number }) {
             <span className="absolute inset-0 bg-gradient-to-t from-bg-2/60 via-transparent via-30% to-transparent" />
           </span>
         </span>
-        <span className="flex min-w-0 flex-1 flex-col p-4 md:p-6">
+        <span className="flex min-w-0 flex-1 flex-col p-4 md:p-6 xl:p-5 2xl:p-6">
           <span className="flex items-center gap-2 font-mono text-[10.5px] font-medium tracking-[0.14em] text-acc uppercase">
             <i aria-hidden className="h-1.5 w-1.5 rounded-full bg-acc shadow-[0_0_8px_var(--color-acc)]" />
             {demo.segment}
           </span>
-          <span className="mt-2 font-display text-[clamp(17px,1.7vw,24px)] leading-tight font-semibold tracking-[-0.02em] md:mt-3">
-            {demo.name}
+          <span className="mt-2 font-display text-[clamp(17px,1.7vw,24px)] leading-tight font-semibold tracking-[-0.02em] md:mt-3 xl:text-[clamp(17px,1.45vw,22px)]">
+            {name}
           </span>
-          <span className="mt-2 text-[13.5px] leading-snug text-mute md:text-[15px] md:leading-relaxed">{demo.blurb}</span>
-          <span className="mt-auto pt-4 md:pt-6">
+          <span className="mt-2 text-[13.5px] leading-snug text-mute md:text-[15px] md:leading-relaxed xl:text-[14px] xl:leading-snug 2xl:text-[15px]">{demo.blurb}</span>
+          <span className="mt-auto pt-4 md:pt-6 xl:pt-4">
             <span className="btn btn-primary btn-sm w-full transition-shadow group-hover:shadow-[0_0_40px_2px_rgb(185_255_75/0.45)] md:py-3 md:text-[14px]">
-              Abrir demo
+              {d.open}
               <span aria-hidden className="transition-transform duration-300 ease-soft group-hover:translate-x-1">
                 →
               </span>
@@ -153,11 +157,11 @@ export function DemoCard({ demo, index }: { demo: Demo; index: number }) {
           type="button"
           onClick={() => setWanted(!playing)}
           aria-pressed={playing}
-          aria-label={playing ? `Pausar prévia do demo ${demo.name}` : `Ver prévia do demo ${demo.name}`}
+          aria-label={fill(playing ? d.pauseLabel : d.playLabel, { name })}
           style={{ top: STRIP + 12 }}
           className="absolute left-3 rounded-full border border-acc/50 bg-[#050807]/85 px-3 py-2 font-mono text-[10.5px] leading-none font-medium tracking-[0.1em] text-acc uppercase backdrop-blur-md transition-[translate,border-color] duration-500 ease-soft group-hover:-translate-y-1.5 hover:border-acc focus-visible:outline-acc"
         >
-          {playing ? "❚❚ pausar" : "▶ ver prévia"}
+          {playing ? d.pause : d.play}
         </button>
       )}
     </div>

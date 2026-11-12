@@ -24,7 +24,7 @@ export function supabaseAdmin(): SupabaseClient | null {
 
 /** Row shape of public.leads (supabase/migrations/0001_leads.sql), minus the generated columns. */
 export type LeadRow = {
-  source: "site" | "demo-imobiliaria" | "demo-restaurante";
+  source: "site" | "demo-imobiliaria" | "demo-restaurante" | "demo-clinica";
   name: string;
   contact: string;
   interests: string[] | null;

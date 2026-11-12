@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { dict, type Lang } from "@/lib/i18n";
 import { startLive } from "./live";
 
 // Chart area inside the 400×250 viewBox.
@@ -15,7 +16,7 @@ const wave = (x: number, c: number) =>
   0.5 + 0.22 * Math.sin(x * 5.2 + c * 1.3) + 0.14 * Math.sin(x * 11 - c * 2.1) + 0.18 * (x - 0.5);
 
 /** Web apps: an app shell whose KPIs, line chart and bars keep updating. */
-export function DashboardViz() {
+export function DashboardViz({ lang = "pt" }: { lang?: Lang }) {
   const ref = useRef<SVGSVGElement>(null);
 
   useEffect(() => {
@@ -89,7 +90,7 @@ export function DashboardViz() {
       ))}
       <rect x="150" y="40" width="130" height="12" rx="6" fill="rgb(190 255 215 / .06)" />
       <text x="160" y="49" fill="#5b6760" fontSize="7" fontFamily="var(--font-mono)">
-        app.seunegocio.com.br
+        {dict(lang).serviceViz.dashboardUrl}
       </text>
 
       {/* sidebar */}

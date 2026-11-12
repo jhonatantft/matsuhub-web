@@ -254,3 +254,46 @@ export const AURORA_SHOWCASE_STEPS = [
     touch: "Toque num andar: a câmera entra, a planta se abre e cada ponto dourado leva a um ambiente. Nada aqui é vídeo.",
   },
 ] as const;
+
+/** The same storyboard for the English homepage (only MatsuHub's commentary; Aurora stays Portuguese). */
+export const AURORA_SHOWCASE_STEPS_EN: readonly {
+  id: (typeof AURORA_SHOWCASE_STEPS)[number]["id"];
+  at: number;
+  label: string;
+  title: string;
+  text: string;
+  touch: string | null;
+}[] = [
+  {
+    id: "blueprint",
+    at: 0,
+    label: "From the drawing…",
+    title: "It all starts with a sketch.",
+    text: "We get the floor plan, the brief and the idea. No templates: your development is the star.",
+    touch: null,
+  },
+  {
+    id: "build",
+    at: 0.1,
+    label: "…to the finished tower",
+    title: "Scrolling raises the building.",
+    text: "From wireframe to final render on the same screen. Visitors build the tower with their own thumb.",
+    touch: null,
+  },
+  {
+    id: "dusk",
+    at: 0.46,
+    label: "Nightfall",
+    title: "The right light sells the view.",
+    text: "Day turns to blue hour and the apartments light up one by one. A still photo can't do that.",
+    touch: null,
+  },
+  {
+    id: "live",
+    at: 0.76,
+    label: "Your turn · live",
+    title: "Now it's your turn.",
+    text: "Hover over the floors and click: the camera flies into the floor, the plan opens and each gold dot leads to a room. None of this is video — it's the site responding to you.",
+    touch: "Tap a floor: the camera flies in, the plan opens and each gold dot leads to a room. None of this is video.",
+  },
+];

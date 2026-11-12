@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/cn";
+import { dict, fill, type Lang } from "@/lib/i18n";
 import { CALL_BACK, TYPE_CPS, fmtSeconds, type Scenario, type Timeline, type TimedStep } from "./agentScenarios";
 import { ToolIcon } from "./icons";
 
@@ -28,13 +29,7 @@ const CSS = `
 }
 `;
 
-const TAG: Record<TimedStep["kind"], string> = {
-  in: "entrada",
-  think: "pensar",
-  tool: "ferramenta",
-  reply: "responder",
-  done: "feito",
-};
+export type RunStatus = "idle" | "running" | "done";
 
 /** `obj.method(args)` with the namespace tinted. */
 function Call({ text }: { text: string }) {
@@ -51,11 +46,13 @@ function Call({ text }: { text: string }) {
   );
 }
 
-type Props = { scenario: Scenario; timeline: Timeline; elapsed: number; status: string };
+type Props = { scenario: Scenario; timeline: Timeline; elapsed: number; status: RunStatus; lang?: Lang };
 
-export function AgentTrace({ scenario, timeline, elapsed, status }: Props) {
+export function AgentTrace({ scenario, timeline, elapsed, status, lang = "pt" }: Props) {
+  const d = dict(lang).agentRun;
+  const TAG: Record<TimedStep["kind"], string> = d.tags;
   const toolLabel = (id: string) => scenario.tools.find((t) => t.id === id)?.label ?? id;
-  const finished = status === "concluído";
+  const finished = status === "done";
 
   return (
     <div className="flex min-w-0 flex-col">
@@ -64,23 +61,23 @@ export function AgentTrace({ scenario, timeline, elapsed, status }: Props) {
       </style>
 
       <div className="flex items-center justify-between border-b border-line px-4 py-3 font-mono text-[10.5px] tracking-[0.14em] text-dim uppercase sm:px-6">
-        <span>registro da execução</span>
-        <span className={cn("flex items-center gap-2", finished ? "text-acc-2" : status === "executando" ? "text-acc" : "")}>
-          {status === "executando" && (
+        <span>{d.log}</span>
+        <span className={cn("flex items-center gap-2", finished ? "text-acc-2" : status === "running" ? "text-acc" : "")}>
+          {status === "running" && (
             <span aria-hidden className="mhb-spin h-2.5 w-2.5 rounded-full border border-current border-t-transparent" />
           )}
-          {status}
+          {d.status[status]}
         </span>
       </div>
 
-      <ol className="relative flex-1 px-4 pt-5 pb-6 sm:px-6" aria-label={`Simulação: ${scenario.tab}`}>
+      <ol className="relative flex-1 px-4 pt-5 pb-6 sm:px-6" aria-label={fill(d.logLabel, { tab: scenario.tab })}>
         {timeline.steps.map((s, i) => {
           const shown = elapsed >= s.start;
           const active = shown && elapsed < s.end;
           const done = elapsed >= s.end;
           const local = active ? (elapsed - s.start) / (s.end - s.start) : done ? 1 : 0;
           const last = i === timeline.steps.length - 1;
-          const stamp = `+${fmtSeconds(s.simStart + (s.kind === "tool" || s.kind === "think" ? 0 : s.sim))}`;
+          const stamp = `+${fmtSeconds(s.simStart + (s.kind === "tool" || s.kind === "think" ? 0 : s.sim), lang)}`;
 
           return (
             <li
@@ -156,7 +153,7 @@ export function AgentTrace({ scenario, timeline, elapsed, status }: Props) {
                       {local < CALL_BACK ? (
                         <>
                           <span aria-hidden className="mhb-spin h-3 w-3 shrink-0 rounded-full border-[1.5px] border-acc border-t-transparent" />
-                          <span className="text-dim">consultando {toolLabel(s.tool)}…</span>
+                          <span className="text-dim">{fill(d.querying, { tool: toolLabel(s.tool) })}</span>
                         </>
                       ) : (
                         <>
@@ -173,7 +170,7 @@ export function AgentTrace({ scenario, timeline, elapsed, status }: Props) {
                   <div className="max-w-[460px] rounded-[16px] rounded-tl-[5px] border border-acc/25 bg-acc/[0.06] px-3.5 py-2.5">
                     <div className="mb-1 flex items-center gap-1.5 font-mono text-[10.5px] text-acc">
                       <ToolIcon name="chat" className="h-3.5 w-3.5" />
-                      resposta · {toolLabel(s.tool)}
+                      {fill(d.reply, { tool: toolLabel(s.tool) })}
                     </div>
                     <p className="grid text-[14px] leading-snug text-ink sm:text-[14.5px]">
                       {/* full text reserves the height; the typed text sits on top */}
@@ -203,9 +200,9 @@ export function AgentTrace({ scenario, timeline, elapsed, status }: Props) {
                     </span>
                     <div className="min-w-0 flex-1">
                       <p className="text-[14px] font-semibold text-ink">
-                        Tarefa concluída em <span className="text-acc tabular-nums">{fmtSeconds(timeline.simTotal)}</span>
+                        {d.taskDone} <span className="text-acc tabular-nums">{fmtSeconds(timeline.simTotal, lang)}</span>
                       </p>
-                      <p className="font-mono text-[11px] text-mute">resumo enviado para {toolLabel(s.tool).toLowerCase()}</p>
+                      <p className="font-mono text-[11px] text-mute">{fill(d.summary, { tool: toolLabel(s.tool).toLowerCase() })}</p>
                     </div>
                     <ul className="flex w-full flex-wrap gap-1.5">
                       {s.outcomes.map((o) => (

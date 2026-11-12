@@ -12,6 +12,8 @@
   --font-mare: var(--font-cormorant), ui-serif, Georgia, serif;
   /* Geometric sans used only by the "Pulso" online-store demo. */
   --font-pulso: var(--font-sora), ui-sans-serif, system-ui, sans-serif;
+  /* Humanist sans built for readability, used only by the "Elo" clinic demo. */
+  --font-elo: var(--font-lexend), ui-sans-serif, system-ui, sans-serif;
 }
 
 @theme {
@@ -52,6 +54,15 @@
   --color-pu-acc: #5b4bff;
   --color-pu-acc-2: #00c8f0;
   --color-pu-line: rgb(12 13 18 / 0.1);
+
+  /* "Elo" demo sub-brand (the sample clinic, components/clinica/**): linen white + deep pine teal + soft clay */
+  --color-el-bg: #f6f3ee;
+  --color-el-bg-2: #ffffff;
+  --color-el-ink: #14201f;
+  --color-el-mute: #5c6866;
+  --color-el-acc: #0f5c57;
+  --color-el-acc-2: #d9825b;
+  --color-el-line: rgb(20 32 31 / 0.1);
 
   --ease-soft: cubic-bezier(0.2, 0.8, 0.2, 1);
   --ease-inout: cubic-bezier(0.65, 0, 0.35, 1);

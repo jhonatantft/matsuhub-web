@@ -1,11 +1,22 @@
 "use client";
 
-import { useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/cn";
-import { INTERESTS, LIMITS, isEmail, validateLead, type LeadErrors, type LeadFields } from "./leadRules";
+import { dict, fill, type Lang } from "@/lib/i18n";
+import {
+  INTERESTS,
+  LEAD_MESSAGES,
+  LIMITS,
+  elapsedSince,
+  isEmail,
+  leadMessage,
+  validateLead,
+  type LeadErrors,
+  type LeadFields,
+} from "./leadRules";
 
-type Status = "idle" | "sending" | "success" | "error";
+type Status = "idle" | "sending" | "success" | "error" | "limited";
 
 const EMPTY: LeadFields = { name: "", contact: "", message: "" };
 
@@ -33,8 +44,30 @@ function FieldError({ id, msg }: { id: string; msg?: string }) {
 
 const labelCls = "mb-2 block font-mono text-[11px] font-medium tracking-[0.14em] text-mute uppercase";
 
-/** The contact form: client validation in pt-BR, POST JSON to /api/lead, success replaces the form. */
-export function LeadForm() {
+/**
+ * The 422 body of /api/lead names the fields it rejected; show them with the form's own messages
+ * (the API's text is Portuguese-only, so it is never displayed).
+ */
+async function serverFieldErrors(res: Response, lang: Lang): Promise<LeadErrors | null> {
+  const body = (await res.json().catch(() => null)) as { error?: string; fields?: unknown } | null;
+  if (body?.error !== "invalid" || !Array.isArray(body.fields)) return null;
+  const e: LeadErrors = {};
+  for (const field of body.fields) {
+    if (field === "name") e.name = leadMessage("nameMin", lang);
+    else if (field === "contact") e.contact = leadMessage("contactInvalid", lang);
+    else if (field === "message") e.message = leadMessage("messageMax", lang);
+  }
+  return Object.keys(e).length ? e : null;
+}
+
+/**
+ * The contact form: client validation in the page's language, POST JSON to /api/lead (the same
+ * payload in both languages: interest values are the API's, only their labels are translated),
+ * success replaces the form. API errors are shown from their codes, never from the server's text.
+ */
+export function LeadForm({ lang = "pt" }: { lang?: Lang }) {
+  const d = dict(lang).lead;
+  const messages = LEAD_MESSAGES[lang];
   const uid = useId();
   const id = (k: string) => `${uid}-${k}`;
   const [f, setF] = useState<LeadFields>(EMPTY);
@@ -47,13 +80,33 @@ export function LeadForm() {
   const [sentVia, setSentVia] = useState("");
   const formRef = useRef<HTMLFormElement>(null);
   const doneRef = useRef<HTMLHeadingElement>(null);
+  // performance.now() when the form first became visible or was first touched (0 = not yet);
+  // sent as elapsedMs so /api/lead can tell people from scripts
+  const startedAt = useRef(0);
+  const markStart = () => {
+    if (!startedAt.current) startedAt.current = performance.now();
+  };
+  const showForm = status !== "success";
+
+  useEffect(() => {
+    const el = formRef.current;
+    if (!showForm || !el || startedAt.current) return;
+    const io = new IntersectionObserver((entries) => {
+      if (entries.some((e) => e.isIntersecting)) {
+        if (!startedAt.current) startedAt.current = performance.now();
+        io.disconnect();
+      }
+    });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [showForm]);
 
   const set = (k: keyof LeadFields) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const next = { ...f, [k]: e.target.value };
     setF(next);
     // after the first submit, re-validate live so messages clear as the user fixes them
-    if (tried) setErrors(validateLead(next));
-    if (status === "error") setStatus("idle");
+    if (tried) setErrors(validateLead(next, lang));
+    if (status === "error" || status === "limited") setStatus("idle");
   };
 
   const toggle = (v: string) =>
@@ -63,7 +116,7 @@ export function LeadForm() {
     e.preventDefault();
     if (status === "sending") return;
     setTried(true);
-    const errs = validateLead(f);
+    const errs = validateLead(f, lang);
     setErrors(errs);
     const first = (["name", "contact", "message"] as const).find((k) => errs[k]);
     if (first) {
@@ -83,11 +136,24 @@ export function LeadForm() {
           interests,
           message: f.message.trim(),
           company,
+          elapsedMs: elapsedSince(startedAt.current),
         }),
       });
+      if (res.status === 429) {
+        setStatus("limited");
+        return;
+      }
+      if (res.status === 422) {
+        const fieldErrors = await serverFieldErrors(res, lang);
+        if (fieldErrors) {
+          setErrors(fieldErrors);
+          setStatus("idle");
+          return;
+        }
+      }
       if (!res.ok) throw new Error(String(res.status));
       setSentName(f.name.trim().split(/\s+/)[0] ?? "");
-      setSentVia(isEmail(f.contact) ? "e-mail" : "WhatsApp");
+      setSentVia(isEmail(f.contact) ? d.viaEmail : d.viaWhatsapp);
       setStatus("success");
       setF(EMPTY);
       setInterests([]);
@@ -99,6 +165,7 @@ export function LeadForm() {
   }
 
   const reset = () => {
+    startedAt.current = performance.now();
     setStatus("idle");
     requestAnimationFrame(() => formRef.current?.querySelector<HTMLElement>('[name="name"]')?.focus());
   };
@@ -119,13 +186,12 @@ export function LeadForm() {
           </svg>
         </div>
         <h3 ref={doneRef} tabIndex={-1} className="h-card mt-8 outline-none">
-          Recebido{sentName ? `, ${sentName}` : ""}!
+          {d.received}
+          {sentName ? `, ${sentName}` : ""}!
         </h3>
-        <p className="mt-3 max-w-[38ch] text-mute">
-          Obrigado pelo contato. Vamos ler com atenção e responder pelo {sentVia} que você deixou.
-        </p>
+        <p className="mt-3 max-w-[38ch] text-mute">{fill(d.thanks, { via: sentVia })}</p>
         <Button variant="ghost" size="sm" arrow={false} className="mt-8" onClick={reset}>
-          Enviar outra mensagem
+          {d.again}
         </Button>
       </div>
     );
@@ -134,18 +200,18 @@ export function LeadForm() {
   const sending = status === "sending";
 
   return (
-    <form ref={formRef} noValidate onSubmit={onSubmit} aria-busy={sending} className="grid gap-6">
+    <form ref={formRef} noValidate onSubmit={onSubmit} onFocusCapture={markStart} aria-busy={sending} className="grid gap-6">
       <div className="grid gap-6 sm:grid-cols-2">
         <div>
           <label htmlFor={id("name")} className={labelCls}>
-            Nome
+            {d.name}
           </label>
           <input
             id={id("name")}
             name="name"
             type="text"
             autoComplete="name"
-            placeholder="Como podemos te chamar?"
+            placeholder={d.namePlaceholder}
             value={f.name}
             onChange={set("name")}
             maxLength={LIMITS.nameMax + 20}
@@ -157,7 +223,7 @@ export function LeadForm() {
         </div>
         <div>
           <label htmlFor={id("contact")} className={labelCls}>
-            E-mail ou WhatsApp
+            {d.contact}
           </label>
           <input
             id={id("contact")}
@@ -165,7 +231,7 @@ export function LeadForm() {
             type="text"
             inputMode="email"
             autoComplete="email"
-            placeholder="voce@empresa.com ou (48) 9…"
+            placeholder={d.contactPlaceholder}
             value={f.contact}
             onChange={set("contact")}
             maxLength={LIMITS.contactMax + 20}
@@ -179,7 +245,7 @@ export function LeadForm() {
 
       <fieldset>
         <legend className={labelCls}>
-          Interesse <span className="tracking-normal text-dim normal-case">— pode marcar mais de um</span>
+          {d.interests} <span className="tracking-normal text-dim normal-case">{d.interestsHint}</span>
         </legend>
         <div className="flex flex-wrap gap-2">
           {INTERESTS.map((v) => {
@@ -196,7 +262,7 @@ export function LeadForm() {
                     : "border-line text-mute hover:border-line-2 hover:text-ink",
                 )}
               >
-                <input type="checkbox" className="sr-only" checked={on} onChange={() => toggle(v)} name="interests" value={v} />
+                <input type="checkbox" className="sr-only" checked={on} onChange={() => toggle(v)} name="interests" />
                 <span
                   aria-hidden
                   className={cn(
@@ -208,7 +274,7 @@ export function LeadForm() {
                     <path d="m3.5 8.5 3 3 6-7" />
                   </svg>
                 </span>
-                {v}
+                {d.interestLabels[v]}
               </label>
             );
           })}
@@ -218,7 +284,7 @@ export function LeadForm() {
       <div>
         <div className="flex items-baseline justify-between">
           <label htmlFor={id("message")} className={labelCls}>
-            Mensagem
+            {d.message}
           </label>
           <span className={cn("font-mono text-[11px] tabular-nums", f.message.length > LIMITS.messageMax ? "text-danger" : "text-dim")}>
             {f.message.length}/{LIMITS.messageMax}
@@ -228,7 +294,7 @@ export function LeadForm() {
           id={id("message")}
           name="message"
           rows={5}
-          placeholder="Conte a ideia, o problema ou o processo que você quer automatizar."
+          placeholder={d.messagePlaceholder}
           value={f.message}
           onChange={set("message")}
           aria-invalid={!!errors.message}
@@ -240,7 +306,7 @@ export function LeadForm() {
 
       {/* honeypot: hidden from people and assistive tech, bots fill it */}
       <div aria-hidden className="absolute -left-[10000px] h-px w-px overflow-hidden">
-        <label htmlFor={id("company")}>Empresa</label>
+        <label htmlFor={id("company")}>{d.company}</label>
         <input
           id={id("company")}
           name="company"
@@ -259,20 +325,29 @@ export function LeadForm() {
               <circle cx="8" cy="8" r="6.5" />
               <path d="M8 4.8v3.6M8 11v.2" strokeLinecap="round" />
             </svg>
-            Não conseguimos enviar agora. Tente de novo em instantes — ou fale com a gente pelo WhatsApp.
+            {messages.failed}
+          </p>
+        )}
+        {status === "limited" && (
+          <p className="flex items-start gap-2.5 rounded-[14px] border border-danger/40 bg-danger/10 px-4 py-3 text-[14px] text-ink">
+            <svg viewBox="0 0 16 16" className="mt-[3px] h-4 w-4 shrink-0 text-danger" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden>
+              <circle cx="8" cy="8" r="6.5" />
+              <path d="M8 4.8v3.6M8 11v.2" strokeLinecap="round" />
+            </svg>
+            {messages.rateLimited}
           </p>
         )}
       </div>
 
       <div className="flex flex-col-reverse items-stretch gap-4 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-[12.5px] leading-snug text-mute sm:max-w-[30ch]">
-          Usamos seus dados só para responder a este contato.
+          {d.privacy}
         </p>
         <Button type="submit" disabled={sending} arrow={sending ? false : "→"} className="h-[54px] px-7 sm:min-w-[210px]">
           {sending && (
             <span aria-hidden className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
           )}
-          {sending ? "Enviando…" : "Enviar mensagem"}
+          {sending ? d.sending : d.send}
         </Button>
       </div>
     </form>

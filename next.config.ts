@@ -30,6 +30,9 @@ const nextConfig: NextConfig = {
     ];
   },
   partialPrefetching: true,
+  // The site has several root layouts (one per language, plus the demos and labs: each sets its own
+  // <html lang>), so unmatched URLs get their 404 from app/global-not-found.tsx.
+  experimental: { globalNotFound: true },
   turbopack: {
     rules: {
       "*.css": {

@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { cn } from "@/lib/cn";
 import { coarsePointer, reducedMotion } from "@/lib/env";
+import { dict, type Lang } from "@/lib/i18n";
 import { damp } from "@/lib/math";
 import { onFrame } from "@/lib/ticker";
 
@@ -40,11 +41,12 @@ type ServiceCardProps = {
   /** Short mono caption shown over the illustration. */
   caption: string;
   className?: string;
+  lang?: Lang;
   children: React.ReactNode;
 };
 
 /** Bento card: cursor spotlight, pointer tilt (desktop), border beam on hover, living illustration on top. */
-export function ServiceCard({ index, title, text, tags, caption, className, children }: ServiceCardProps) {
+export function ServiceCard({ index, title, text, tags, caption, className, lang = "pt", children }: ServiceCardProps) {
   const ref = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -140,7 +142,7 @@ export function ServiceCard({ index, title, text, tags, caption, className, chil
       <div className="relative mt-auto px-6 pb-7 md:px-8 md:pb-8">
         <h3 className="h-card mb-2.5">{title}</h3>
         <p className="max-w-[46ch] text-[15px] leading-relaxed text-mute">{text}</p>
-        <ul className="mt-5 flex flex-wrap gap-1.5" aria-label="Tecnologias">
+        <ul className="mt-5 flex flex-wrap gap-1.5" aria-label={dict(lang).services.tech}>
           {tags.map((t) => (
             <li key={t} className="sa-chip chip">
               {t}

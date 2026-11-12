@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { MARQUEE, SERVICES } from "@/content/site";
 import { reducedMotion } from "@/lib/env";
+import { dict, t, type Lang } from "@/lib/i18n";
 import { labParam } from "@/lib/lab";
 import { clamp, damp } from "@/lib/math";
 import { onFrame } from "@/lib/ticker";
@@ -28,7 +29,8 @@ function Star() {
  * Capability band between the hero and Services. Drifts on its own and reacts to scroll:
  * faster and slightly skewed while the page moves, direction following the scroll.
  */
-export function Marquee() {
+export function Marquee({ lang = "pt" }: { lang?: Lang }) {
+  const items = t(MARQUEE, lang);
   const rootRef = useRef<HTMLElement>(null);
   const bigRef = useRef<HTMLDivElement>(null);
   const smallRef = useRef<HTMLDivElement>(null);
@@ -105,15 +107,15 @@ export function Marquee() {
   return (
     <section
       ref={rootRef}
-      aria-label="O que fazemos"
+      aria-label={dict(lang).marquee.label}
       className="relative z-[2] overflow-hidden border-y border-line bg-bg [mask-image:linear-gradient(90deg,transparent,#000_7%,#000_93%,transparent)]"
     >
-      <p className="sr-only">{MARQUEE.join(", ")}</p>
+      <p className="sr-only">{items.join(", ")}</p>
       <div aria-hidden className="py-[clamp(18px,2.4vw,30px)]">
         <div ref={bigRef} className="flex w-max will-change-transform">
           {Array.from({ length: COPIES }, (_, c) => (
             <div key={c} className="flex shrink-0 items-center">
-              {MARQUEE.map((item, i) => (
+              {items.map((item, i) => (
                 <span key={item} className="flex items-center">
                   <span
                     className={

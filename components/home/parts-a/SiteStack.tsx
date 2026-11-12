@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { dict, type Lang } from "@/lib/i18n";
 import { startLive } from "./live";
 
 const CSS = `
@@ -22,7 +23,7 @@ const CSS = `
 `;
 
 /** Sites: a web page exploded into floating 3D layers (grid, layout, interface) that slowly turns. */
-export function SiteStack() {
+export function SiteStack({ lang = "pt" }: { lang?: Lang }) {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -84,7 +85,7 @@ export function SiteStack() {
         </div>
         <div className="sa-ss-l" data-i="2">
           <span className="absolute top-[74px] left-[12px] rounded-full bg-acc px-2.5 py-1 font-mono text-[7px] font-bold text-[#061006] shadow-[0_0_24px_rgb(185_255_75/.7)]">
-            AGENDAR →
+            {dict(lang).serviceViz.siteCta}
           </span>
           <svg className="absolute top-[84px] left-[66px] h-4 w-4" viewBox="0 0 16 16">
             <path d="M2 1l11 6-5 1.5L6 14Z" fill="#eef4ee" stroke="#050807" strokeWidth=".8" />

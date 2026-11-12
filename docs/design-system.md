@@ -1,6 +1,6 @@
 # MatsuHub web — design system and working rules
 
-The site of a software house (web products + AI agents). It must feel **dark, holographic and alive**: near-black canvas, lime and mint light, wide display type, and every section reacting to scroll or cursor. Copy is **pt-BR**. The original direction lives in `mock/index.html` (approved by the owner: "follow this line, make it much better").
+The site of a software house (web products + AI agents). It must feel **dark, holographic and alive**: near-black canvas, lime and mint light, wide display type, and every section reacting to scroll or cursor. Copy is **pt-BR** first, with an English version under `/en` (see "Languages"). The original direction lives in `mock/index.html` (approved by the owner: "follow this line, make it much better").
 
 ## Two brands on one site
 
@@ -31,6 +31,16 @@ Aurora must read as a *different client's site* shown inside ours. Never mix lim
 - `lib/math.ts` → `clamp, lerp, seg, remap, smoothstep, easeOutCubic, easeInOutCubic, easeOutExpo, damp`.
 - `lib/env.ts` → `reducedMotion()`, `coarsePointer()`, `quality()`, `maxDpr(q)`.
 - `content/site.ts`, `content/aurora.ts` → all copy and sample data.
+
+## Languages (pt-BR + English)
+
+- **URLs.** Portuguese is unprefixed (`/`, `/solucoes`, `/solucoes/<slug>`); English lives under `/en` (`/en`, `/en/solutions`, `/en/solutions/<slug>`). The demos (`/demos/*`) are Portuguese-only sites of fictional Brazilian clients.
+- **Routing.** One root layout per tree, each rendering `components/layout/RootDocument` with its own `<html lang>`: `app/(site)` (pt-BR site), `app/en` (English site), `app/demos`, `app/lab`. Pages are static folders (no `[lang]`/`[slug]` params) so everything prerenders as ○. Moving between trees is a full page load. Unmatched URLs get `app/global-not-found.tsx` (`experimental.globalNotFound`), which switches itself to English under `/en` before paint.
+- **Copy.** `lib/i18n/core` has `Lang`, `Localized<T> = { pt, en }`, `t()` and `fill()`. Content is written as pairs in `content/site.ts` and `content/segments.ts`; interface microcopy (buttons, statuses, aria labels, the process illustrations) is in `lib/i18n/dictionaries/{pt,en}.ts` (`dict(lang)`; en.ts is type-checked against pt.ts). Form messages live in `components/home/parts-b/leadRules.ts` (`LEAD_MESSAGES`), shown from error codes — never the API's text.
+- **Components** take `lang` (default `"pt"`) and resolve copy on the server; client components get `lang` or already-resolved strings, never `{ pt, en }` objects (they would ship both languages in the HTML).
+- **Links.** Build them, never hard-code them: `sectionHref("contact", lang)` → `/#contato` · `/en#contact`; section ids come from `sectionId(key, lang)`; `SEGMENT_HREFS[lang]` for the solutions pages; `lib/i18n/routes` maps equivalent pages (switcher, hreflang, sitemap).
+- **Metadata.** Root layouts use `rootMetadata(lang)`; bilingual pages use `pageMetadata(key, lang, copy)` (canonical + hreflang pt-BR/en/x-default + Open Graph). A page that sets its own Open Graph needs its `opengraph-image` file next to it.
+- **Switcher + cookie.** `components/layout/LangSwitch` ("PT · EN") goes to the twin page, keeps a mapped section hash and sets the `lang=en` cookie (`lib/i18n/cookie`); site pages also set/clear it on visit. The demo chrome (`DemoBar`, `DemoOutro`) reads it with `useSiteLang()` and speaks English when it says so. No automatic redirects by Accept-Language or location.
 
 ## Motion rules
 

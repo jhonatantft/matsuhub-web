@@ -5,9 +5,10 @@ import { cn } from "@/lib/cn";
 import { reducedMotion } from "@/lib/env";
 import { labParam } from "@/lib/lab";
 import { clamp } from "@/lib/math";
+import { dict, type Lang } from "@/lib/i18n";
 import { onFrame } from "@/lib/ticker";
 import { AgentGraph, type GraphState } from "./AgentGraph";
-import { AgentTrace } from "./AgentTrace";
+import { AgentTrace, type RunStatus } from "./AgentTrace";
 import { CALL_BACK, CALL_OUT, SCENARIOS, TIMELINES, fmtSeconds, type Timeline } from "./agentScenarios";
 
 type Mode = "idle" | "playing" | "done" | "static";
@@ -54,7 +55,10 @@ function derive(tl: Timeline, elapsed: number) {
   return { graph, sim, toolCalls, stepsDone };
 }
 
-export function AgentRun() {
+export function AgentRun({ lang = "pt" }: { lang?: Lang }) {
+  const scenarios = SCENARIOS[lang];
+  const timelines = TIMELINES[lang];
+  const d = dict(lang).agentRun;
   const [sIdx, setSIdx] = useState(0);
   const [elapsed, setElapsed] = useState(0);
   const [mode, setMode] = useState<Mode>("idle");
@@ -71,8 +75,8 @@ export function AgentRun() {
   const reducedRef = useRef(false);
   const configured = useRef(false);
 
-  const sc = SCENARIOS[sIdx];
-  const tl = TIMELINES[sIdx];
+  const sc = scenarios[sIdx];
+  const tl = timelines[sIdx];
 
   /* Autoplay when scrolled into view; config (reduced motion, lab overrides) on the first callback. */
   useEffect(() => {
@@ -86,12 +90,12 @@ export function AgentRun() {
           reducedRef.current = reducedMotion();
           // Lab overrides for screenshots: ?scenario=1&run=4.5 freezes the run at 4.5 s.
           const fs = labParam("scenario");
-          const idx = fs === null ? 0 : clamp(Math.round(fs), 0, SCENARIOS.length - 1);
+          const idx = fs === null ? 0 : clamp(Math.round(fs), 0, scenarios.length - 1);
           const forced = labParam("run");
           if (idx !== 0) setSIdx(idx);
           if (forced !== null || reducedRef.current) {
             autoRef.current = false;
-            const t = forced ?? TIMELINES[idx].total;
+            const t = forced ?? timelines[idx].total;
             elRef.current = t;
             setElapsed(t);
             setMode("static");
@@ -105,7 +109,7 @@ export function AgentRun() {
     );
     io.observe(node);
     return () => io.disconnect();
-  }, []);
+  }, [scenarios, timelines]);
 
   /* Graph box size, for placing the pulse in pixels (transform only). */
   useEffect(() => {
@@ -121,7 +125,7 @@ export function AgentRun() {
   /* The run itself: advances only while on screen and the tab is visible. */
   useEffect(() => {
     if (mode !== "playing" && mode !== "done") return;
-    const timeline = TIMELINES[sIdx];
+    const timeline = timelines[sIdx];
     const pulse = pulseRef.current;
 
     const drawPulse = (t: number) => {
@@ -169,18 +173,18 @@ export function AgentRun() {
       if (holdRef.current > HOLD) {
         elRef.current = 0;
         setElapsed(0);
-        setSIdx((sIdx + 1) % SCENARIOS.length);
+        setSIdx((sIdx + 1) % scenarios.length);
         setMode("playing");
       }
     });
-  }, [mode, sIdx]);
+  }, [mode, sIdx, scenarios, timelines]);
 
   const start = (idx: number) => {
     autoRef.current = false;
     holdRef.current = 0;
     setSIdx(idx);
     if (reducedRef.current) {
-      elRef.current = TIMELINES[idx].total;
+      elRef.current = timelines[idx].total;
       setElapsed(elRef.current);
       setMode("static");
       return;
@@ -191,7 +195,7 @@ export function AgentRun() {
   };
 
   const onTabKey = (e: React.KeyboardEvent<HTMLButtonElement>, i: number) => {
-    const n = SCENARIOS.length;
+    const n = scenarios.length;
     let next = -1;
     if (e.key === "ArrowRight") next = (i + 1) % n;
     else if (e.key === "ArrowLeft") next = (i - 1 + n) % n;
@@ -200,12 +204,12 @@ export function AgentRun() {
     if (next < 0) return;
     e.preventDefault();
     start(next);
-    document.getElementById(`agent-tab-${SCENARIOS[next].id}`)?.focus();
+    document.getElementById(`agent-tab-${scenarios[next].id}`)?.focus();
   };
 
-  const d = derive(tl, elapsed);
-  const finished = d.graph.finished;
-  const status = mode === "idle" ? "aguardando" : finished ? "concluído" : "executando";
+  const run = derive(tl, elapsed);
+  const finished = run.graph.finished;
+  const status: RunStatus = mode === "idle" ? "idle" : finished ? "done" : "running";
 
   return (
     <div ref={rootRef} className="relative">
@@ -233,16 +237,16 @@ export function AgentRun() {
               )}
             />
             <span className="truncate">
-              agente · <span className="text-ink">{sc.agent}</span>
+              {d.agent} · <span className="text-ink">{sc.agent}</span>
             </span>
           </div>
 
           <div
             role="tablist"
-            aria-label="Cenários de exemplo"
+            aria-label={d.scenarios}
             className="order-last flex w-full gap-1 rounded-full border border-line bg-black/30 p-1 md:order-none md:mx-auto md:w-auto"
           >
-            {SCENARIOS.map((s, i) => {
+            {scenarios.map((s, i) => {
               const sel = i === sIdx;
               return (
                 <button
@@ -267,14 +271,14 @@ export function AgentRun() {
           </div>
 
           <div className="flex shrink-0 items-center gap-2.5">
-            <span className="chip border-warm/30 text-warm">simulação</span>
+            <span className="chip border-warm/30 text-warm">{d.simulation}</span>
             <span className="hidden font-mono text-[12px] text-mute tabular-nums sm:inline" aria-hidden>
-              {fmtSeconds(d.sim)}
+              {fmtSeconds(run.sim, lang)}
             </span>
             <button
               type="button"
               onClick={() => start(sIdx)}
-              aria-label="Repetir a simulação"
+              aria-label={d.replay}
               className="group relative grid h-8 w-8 cursor-pointer before:absolute before:-inset-[5px] before:content-[''] place-items-center rounded-full border border-line-2 text-mute transition-colors duration-300 hover:border-acc hover:text-acc"
             >
               <svg
@@ -303,18 +307,19 @@ export function AgentRun() {
           <div className="relative flex flex-col border-b border-line lg:border-r lg:border-b-0">
             <AgentGraph
               tools={sc.tools}
-              state={d.graph}
+              state={run.graph}
               boxRef={graphBoxRef}
               pulseRef={pulseRef}
               pathsRef={pathsRef}
               steps={tl.steps}
               elapsed={elapsed}
+              lang={lang}
             />
             <dl className="grid grid-cols-3 border-t border-line">
               {[
-                ["Passos", `${d.stepsDone}/${tl.steps.length}`],
-                ["Ferramentas", String(d.toolCalls)],
-                ["Tempo", fmtSeconds(d.sim)],
+                [d.stats.steps, `${run.stepsDone}/${tl.steps.length}`],
+                [d.stats.tools, String(run.toolCalls)],
+                [d.stats.time, fmtSeconds(run.sim, lang)],
               ].map(([k, v], i) => (
                 <div key={k} className={cn("px-4 py-3.5 sm:px-6", i > 0 && "border-l border-line")}>
                   <dt className="font-mono text-[10px] tracking-[0.14em] text-dim uppercase">{k}</dt>
@@ -327,11 +332,11 @@ export function AgentRun() {
                 <path d="M12 3 5 6v5.5c0 4.2 2.9 7.7 7 9.5 4.1-1.8 7-5.3 7-9.5V6Z" />
                 <path d="m9 12 2.2 2.2L15.5 10" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
-              Humano no controle · cada passo fica registrado
+              {d.human}
             </p>
           </div>
 
-          <AgentTrace scenario={sc} timeline={tl} elapsed={elapsed} status={status} />
+          <AgentTrace scenario={sc} timeline={tl} elapsed={elapsed} status={status} lang={lang} />
         </div>
       </div>
     </div>

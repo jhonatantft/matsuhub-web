@@ -1,10 +1,8 @@
-import type { Metadata, Viewport } from "next";
-import { Cormorant, Fraunces, JetBrains_Mono, Manrope, Sora, Unbounded } from "next/font/google";
-import "./globals.css";
+import "@/app/globals.css";
+import { Cormorant, Fraunces, JetBrains_Mono, Lexend, Manrope, Sora, Unbounded } from "next/font/google";
 import { Ambient } from "@/components/layout/Ambient";
 import { SmoothScroll } from "@/components/layout/SmoothScroll";
-import { SITE } from "@/content/site";
-import { siteUrl } from "@/lib/site-url";
+import { HTML_LANG, type Lang } from "@/lib/i18n/core";
 
 const display = Unbounded({ subsets: ["latin"], variable: "--font-unbounded", display: "swap" });
 const sans = Manrope({ subsets: ["latin"], variable: "--font-manrope", display: "swap" });
@@ -20,29 +18,34 @@ const mare = Cormorant({
   display: "swap",
   preload: false,
 });
-
 // Geometric sans for the "Pulso" online-store demo only.
 const pulso = Sora({ subsets: ["latin"], variable: "--font-sora", display: "swap", preload: false });
+// Readable humanist sans for the "Elo" clinic demo only.
+const elo = Lexend({ subsets: ["latin"], variable: "--font-lexend", display: "swap", preload: false });
 
-export const metadata: Metadata = {
-  metadataBase: new URL(siteUrl()),
-  title: { default: `${SITE.name} — Software e agentes de IA`, template: `%s · ${SITE.name}` },
-  description: SITE.description,
-  openGraph: {
-    type: "website",
-    locale: "pt_BR",
-    siteName: SITE.name,
-    title: `${SITE.name} — Software e agentes de IA`,
-    description: SITE.description,
-  },
-  twitter: { card: "summary_large_image" },
-};
+const FONTS = [display, sans, mono, aurora, mare, pulso, elo].map((font) => font.variable).join(" ");
 
-export const viewport: Viewport = { themeColor: "#050807", colorScheme: "dark" };
-
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+/**
+ * The <html> document shared by every root layout: app/(site) (Portuguese site), app/en (English
+ * site), app/demos and app/lab. Each tree is its own root layout so `<html lang>` is right in the
+ * static HTML; this keeps the fonts, global CSS and ambient layers identical across them.
+ */
+export function RootDocument({
+  lang,
+  head,
+  children,
+}: {
+  lang: Lang;
+  /** Extra <head> content (app/global-not-found sets its language from the URL before paint). */
+  head?: React.ReactNode;
+  children: React.ReactNode;
+}) {
   return (
-    <html lang="pt-BR" className={`${display.variable} ${sans.variable} ${mono.variable} ${aurora.variable} ${mare.variable} ${pulso.variable}`}>
+    <html lang={HTML_LANG[lang]} className={FONTS} suppressHydrationWarning={!!head}>
+      {head && (
+        // eslint-disable-next-line @next/next/no-head-element -- App Router root layout: Next merges the metadata into it
+        <head>{head}</head>
+      )}
       <body>
         <noscript>
           <style>{`[data-reveal]{opacity:1!important;transform:none!important}`}</style>

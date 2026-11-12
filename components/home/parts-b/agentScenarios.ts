@@ -1,8 +1,11 @@
 /**
- * Scripted, deterministic "agent runs" for the Agents section. Nothing here is real data:
- * the panel is labelled "simulação". Timings are in animation seconds; `ms` on a tool call
- * is the simulated latency shown to the reader.
+ * Scripted, deterministic "agent runs" for the Agents section, one set per language (same
+ * structure, ids and latencies). Nothing here is real data: the panel is labelled "simulação" /
+ * "simulation". Timings are in animation seconds; `ms` on a tool call is the simulated latency
+ * shown to the reader.
  */
+
+import { decimal, type Lang, type Localized } from "@/lib/i18n/core";
 
 export type IconName =
   | "chat"
@@ -53,7 +56,7 @@ const SLOTS = [
 ] as const;
 const at = (i: number) => SLOTS[i];
 
-export const SCENARIOS: Scenario[] = [
+const SCENARIOS_PT: Scenario[] = [
   {
     id: "imobiliaria",
     tab: "Imobiliária",
@@ -170,6 +173,125 @@ export const SCENARIOS: Scenario[] = [
   },
 ];
 
+const SCENARIOS_EN: Scenario[] = [
+  {
+    id: "imobiliaria",
+    tab: "Real estate",
+    agent: "sdr-real-estate",
+    tools: [
+      { id: "whatsapp", label: "WhatsApp", icon: "chat", ...at(0) },
+      { id: "kb", label: "Knowledge base", icon: "book", ...at(1) },
+      { id: "team", label: "Broker", icon: "person", ...at(2) },
+      { id: "crm", label: "CRM", icon: "crm", ...at(3) },
+      { id: "units", label: "Listings", icon: "building", ...at(4) },
+      { id: "agenda", label: "Calendar", icon: "calendar", ...at(5) },
+    ],
+    steps: [
+      {
+        kind: "in",
+        tool: "whatsapp",
+        channel: "WhatsApp",
+        from: "Marina",
+        text: "Hi! Do you have 3-bedroom apartments near the beach? Could I see one on Saturday?",
+      },
+      {
+        kind: "think",
+        text: "Buying intent, family profile, high urgency. Qualify, find 3-bedroom units and hold a Saturday slot.",
+      },
+      { kind: "tool", tool: "crm", call: 'crm.qualify(lead: "Marina")', result: "hot lead · budget up to R$ 2M", ms: 240 },
+      {
+        kind: "tool",
+        tool: "units",
+        call: "listings.search({ bedrooms: 3, near_beach: true })",
+        result: "4 units · best match: 1804, sea view",
+        ms: 410,
+      },
+      { kind: "tool", tool: "agenda", call: 'calendar.book("sat", unit: 1804)', result: "viewing booked · Sat 10:00 am", ms: 320 },
+      {
+        kind: "reply",
+        tool: "whatsapp",
+        text: "I found 4 three-bedroom options — 1804 has a sea view. I've booked Saturday at 10 am for your viewing. I'll send you the location right here!",
+      },
+      { kind: "tool", tool: "crm", call: 'crm.update(stage: "viewing booked")', result: "deal moved along the pipeline", ms: 180 },
+      { kind: "done", tool: "team", outcomes: ["viewing booked", "CRM updated", "broker notified"] },
+    ],
+  },
+  {
+    id: "clinica",
+    tab: "Clinic",
+    agent: "clinic-front-desk",
+    tools: [
+      { id: "whatsapp", label: "WhatsApp", icon: "chat", ...at(0) },
+      { id: "kb", label: "Knowledge base", icon: "book", ...at(1) },
+      { id: "team", label: "Front desk", icon: "person", ...at(2) },
+      { id: "patients", label: "Patients", icon: "clipboard", ...at(3) },
+      { id: "agenda", label: "Calendar", icon: "calendar", ...at(4) },
+      { id: "remind", label: "Reminders", icon: "bell", ...at(5) },
+    ],
+    steps: [
+      {
+        kind: "in",
+        tool: "whatsapp",
+        channel: "WhatsApp",
+        from: "Carlos",
+        text: "Good morning! I can't make my Thursday appointment. Could we move it to Tuesday morning?",
+      },
+      {
+        kind: "think",
+        text: "Reschedule request. Find the appointment, check the policy and look for Tuesday morning with the same doctor.",
+      },
+      { kind: "tool", tool: "patients", call: 'patients.current_appointment("Carlos")', result: "Thu 2:00 pm · Dr. Helena · dermatology", ms: 190 },
+      { kind: "tool", tool: "kb", call: "policies.rescheduling()", result: "free with 24 h notice", ms: 150 },
+      { kind: "tool", tool: "agenda", call: 'calendar.reschedule("tue", morning: true)', result: "Tue 9:30 am confirmed · Thursday freed up", ms: 360 },
+      {
+        kind: "reply",
+        tool: "whatsapp",
+        text: "Done, Carlos! Your appointment with Dr. Helena is now Tuesday at 9:30 am, at no cost. I'll remind you here on Monday evening.",
+      },
+      { kind: "tool", tool: "remind", call: 'reminders.schedule("mon 6:00 pm", channel: "whatsapp")', result: "reminder scheduled", ms: 120 },
+      { kind: "done", tool: "team", outcomes: ["appointment moved", "slot freed up", "reminder scheduled"] },
+    ],
+  },
+  {
+    id: "ecommerce",
+    tab: "E-commerce",
+    agent: "store-support",
+    tools: [
+      { id: "whatsapp", label: "WhatsApp", icon: "chat", ...at(0) },
+      { id: "kb", label: "Knowledge base", icon: "book", ...at(1) },
+      { id: "team", label: "Support team", icon: "person", ...at(2) },
+      { id: "orders", label: "Orders", icon: "box", ...at(3) },
+      { id: "returns", label: "Exchanges", icon: "swap", ...at(4) },
+      { id: "shipping", label: "Shipping", icon: "truck", ...at(5) },
+    ],
+    steps: [
+      {
+        kind: "in",
+        tool: "whatsapp",
+        channel: "WhatsApp",
+        from: "Juliana",
+        text: "My order 48213 arrived, but the sneakers are too small. Can I swap them for a bigger size?",
+      },
+      {
+        kind: "think",
+        text: "Size exchange. Check the order and the exchange window, open an exchange for a 38 and create the shipping label.",
+      },
+      { kind: "tool", tool: "orders", call: 'orders.lookup("48213")', result: "delivered 3 days ago · Runner sneakers, size 37", ms: 210 },
+      { kind: "tool", tool: "kb", call: "policies.exchanges()", result: "free exchanges within 30 days", ms: 140 },
+      { kind: "tool", tool: "returns", call: "exchanges.open({ from: 37, to: 38 })", result: "exchange T-1192 opened · size 38 on hold", ms: 380 },
+      { kind: "tool", tool: "shipping", call: 'shipping.label("T-1192")', result: "return label created", ms: 450 },
+      {
+        kind: "reply",
+        tool: "whatsapp",
+        text: "All set, Juliana! I've opened the exchange and put a 38 on hold for you. The label is in your email — just drop the parcel off, free of charge.",
+      },
+      { kind: "done", tool: "team", outcomes: ["exchange opened", "label sent", "stock on hold"] },
+    ],
+  },
+];
+
+export const SCENARIOS: Localized<Scenario[]> = { pt: SCENARIOS_PT, en: SCENARIOS_EN };
+
 /* ───────────── Timeline ───────────── */
 
 export type TimedStep = Step & { start: number; end: number; sim: number; simStart: number };
@@ -224,10 +346,10 @@ export function buildTimeline(sc: Scenario): Timeline {
   return { steps, total: t, simTotal: sim };
 }
 
-export const TIMELINES = SCENARIOS.map(buildTimeline);
+export const TIMELINES: Localized<Timeline[]> = { pt: SCENARIOS_PT.map(buildTimeline), en: SCENARIOS_EN.map(buildTimeline) };
 
 /** Phase of a tool call (0..1 of the step): the call travels out, then the result comes back. */
 export const CALL_OUT = 0.42;
 export const CALL_BACK = 0.78;
 
-export const fmtSeconds = (s: number) => `${s.toFixed(1).replace(".", ",")} s`;
+export const fmtSeconds = (s: number, lang: Lang) => `${decimal(s, 1, lang)} s`;

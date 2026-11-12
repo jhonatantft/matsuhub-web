@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/cn";
+import { dict, type Dictionary, type Lang } from "@/lib/i18n";
 import type { TimedStep, Tool } from "./agentScenarios";
 import { ToolIcon } from "./icons";
 
@@ -25,21 +26,21 @@ const edge = (t: Tool) => {
   return `M${CORE.x} ${CORE.y} C${mx} ${CORE.y} ${mx} ${t.y} ${t.x} ${t.y}`;
 };
 
-function toolStatus(t: Tool, state: GraphState, steps: TimedStep[], elapsed: number) {
+function toolStatus(t: Tool, state: GraphState, steps: TimedStep[], elapsed: number, w: Dictionary["agentRun"]["tool"]) {
   if (state.active === t.id) {
     const step = steps.find((s) => elapsed >= s.start && elapsed < s.end);
-    if (step?.kind === "in") return "recebendo";
-    if (step?.kind === "reply") return "enviando";
-    if (step?.kind === "done") return "notificando";
-    return state.calling ? "chamando…" : "respondeu";
+    if (step?.kind === "in") return w.receiving;
+    if (step?.kind === "reply") return w.sending;
+    if (step?.kind === "done") return w.notifying;
+    return state.calling ? w.calling : w.answered;
   }
   const past = steps.filter((s) => "tool" in s && s.tool === t.id && elapsed >= s.end);
   const last = past[past.length - 1];
-  if (!last) return "pronto";
-  if (last.kind === "tool") return `ok · ${last.ms} ms`;
-  if (last.kind === "done") return "notificado";
-  if (last.kind === "reply") return "enviado";
-  return "ok";
+  if (!last) return w.ready;
+  if (last.kind === "tool") return `${w.ok} · ${last.ms} ms`;
+  if (last.kind === "done") return w.notified;
+  if (last.kind === "reply") return w.sent;
+  return w.ok;
 }
 
 type Props = {
@@ -50,10 +51,12 @@ type Props = {
   boxRef: React.RefObject<HTMLDivElement | null>;
   pulseRef: React.RefObject<HTMLDivElement | null>;
   pathsRef: React.RefObject<Map<string, SVGPathElement>>;
+  lang?: Lang;
 };
 
 /** The agent core with its tools around it. The travelling pulse is positioned by AgentRun's frame loop. */
-export function AgentGraph({ tools, state, steps, elapsed, boxRef, pulseRef, pathsRef }: Props) {
+export function AgentGraph({ tools, state, steps, elapsed, boxRef, pulseRef, pathsRef, lang = "pt" }: Props) {
+  const d = dict(lang).agentRun;
   const touched = (id: string) => steps.some((s) => "tool" in s && s.tool === id && elapsed >= s.end);
 
   return (
@@ -155,7 +158,7 @@ export function AgentGraph({ tools, state, steps, elapsed, boxRef, pulseRef, pat
                 <circle cx="12" cy="14" r="2.2" fill="var(--color-acc)" />
               </svg>
               <span className="mt-1 font-mono text-[9px] tracking-[0.18em] text-acc uppercase sm:text-[10px]">
-                {state.thinking ? "pensando" : state.finished ? "feito" : "agente"}
+                {state.thinking ? d.core.thinking : state.finished ? d.core.done : d.core.idle}
               </span>
             </span>
           </div>
@@ -207,7 +210,7 @@ export function AgentGraph({ tools, state, steps, elapsed, boxRef, pulseRef, pat
                         hot ? "text-acc" : used ? "text-acc-2/80" : "text-dim",
                       )}
                     >
-                      {toolStatus(t, state, steps, elapsed)}
+                      {toolStatus(t, state, steps, elapsed, d.tool)}
                     </span>
                   </span>
                 </div>

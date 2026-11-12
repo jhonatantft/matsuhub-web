@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { isPhone, LIMITS } from "@/components/home/parts-b/leadRules";
+import { elapsedSince, isPhone, LIMITS, RATE_LIMITED_MESSAGE } from "@/components/home/parts-b/leadRules";
 import { MARE, MARE_TABLES, MARE_ZONES } from "@/content/mare";
 import { cn } from "@/lib/cn";
 import {
@@ -19,7 +19,7 @@ import {
 } from "./bus";
 import { SiteHeading, SiteSection } from "./SiteSection";
 
-type Status = "idle" | "sending" | "sent" | "error";
+type Status = "idle" | "sending" | "sent" | "error" | "limited";
 type Errors = Partial<Record<"date" | "slot" | "party" | "table" | "name" | "contact" | "message", string>>;
 
 const GROUPS = MARE_ZONES.filter((z) => z.bookable).map((z) => ({
@@ -54,11 +54,29 @@ export function SiteReserve() {
 
   const dateRef = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLDivElement>(null);
+  // performance.now() when the form was first seen or touched (0 = not yet) → elapsedMs
+  const startedAt = useRef(0);
+  const markStart = () => {
+    if (!startedAt.current) startedAt.current = performance.now();
+  };
 
   // the date picker starts at today (set on the DOM: no clock reads during render)
   useEffect(() => {
     if (dateRef.current) dateRef.current.min = todayIso();
   });
+
+  useEffect(() => {
+    const el = formRef.current;
+    if (!el) return;
+    const io = new IntersectionObserver((entries) => {
+      if (entries.some((e) => e.isIntersecting)) {
+        if (!startedAt.current) startedAt.current = performance.now();
+        io.disconnect();
+      }
+    });
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
 
   useEffect(() => {
     const apply = (p: ReservePrefill, scroll: boolean) => {
@@ -122,11 +140,16 @@ export function SiteReserve() {
           interest: `${chosen?.label ?? "Sem preferência de mesa"} · ${brDate(date)} · ${slot} · ${party} ${party === 1 ? "pessoa" : "pessoas"}`,
           message: message.trim(),
           company,
+          elapsedMs: elapsedSince(startedAt.current),
         }),
       });
       const body = (await res.json().catch(() => null)) as { ok?: boolean; fields?: string[] } | null;
       if (res.ok && body?.ok) {
         setStatus("sent");
+        return;
+      }
+      if (res.status === 429) {
+        setStatus("limited");
         return;
       }
       if (res.status === 422 && body?.fields?.includes("contact")) {
@@ -193,7 +216,10 @@ export function SiteReserve() {
               </p>
               <button
                 type="button"
-                onClick={() => setStatus("idle")}
+                onClick={() => {
+                  startedAt.current = performance.now();
+                  setStatus("idle");
+                }}
                 className="mt-7 rounded-full border border-ma-line px-5 py-3.5 text-[10px] leading-none font-bold tracking-[0.22em] uppercase transition-colors hover:border-ma-ember hover:text-ma-ember"
               >
                 Fazer outra reserva
@@ -202,6 +228,7 @@ export function SiteReserve() {
           ) : (
             <form
               noValidate
+              onFocusCapture={markStart}
               onSubmit={(event) => {
                 event.preventDefault();
                 void submit();
@@ -361,6 +388,11 @@ export function SiteReserve() {
                   Não conseguimos enviar agora. Seus dados continuam aqui: verifique a conexão e toque em “Tentar novamente”.
                 </p>
               )}
+              {status === "limited" && (
+                <p role="alert" className="rounded-[12px] border border-[#e58a7a]/50 px-4 py-3 text-[13.5px] leading-snug text-[#f3b4a6]">
+                  {RATE_LIMITED_MESSAGE}
+                </p>
+              )}
 
               <div className="flex flex-wrap items-center gap-5">
                 <button
@@ -368,7 +400,7 @@ export function SiteReserve() {
                   disabled={status === "sending"}
                   className="group flex items-center gap-4 rounded-full bg-ma-ember px-7 py-4.5 text-[10.5px] leading-none font-bold tracking-[0.24em] text-ma-bg uppercase transition-[background-color,opacity] hover:bg-ma-ink disabled:opacity-60"
                 >
-                  {status === "sending" ? "Enviando…" : status === "error" ? "Tentar novamente" : "Pedir reserva"}
+                  {status === "sending" ? "Enviando…" : status === "error" || status === "limited" ? "Tentar novamente" : "Pedir reserva"}
                   <span aria-hidden className="transition-transform duration-300 group-hover:translate-x-1">
                     →
                   </span>

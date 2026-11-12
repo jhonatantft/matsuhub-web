@@ -1,16 +1,16 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { dict, type Lang } from "@/lib/i18n";
 import { fract, pointAt, samplePath, startLive } from "./live";
 
 const CORE = { x: 220, y: 128 };
 const TOOLS = [
-  { label: "WhatsApp", x: 76, y: 66 },
-  { label: "CRM", x: 70, y: 196 },
-  { label: "Agenda", x: 366, y: 62 },
-  { label: "Base RAG", x: 370, y: 194 },
+  { x: 76, y: 66 },
+  { x: 70, y: 196 },
+  { x: 366, y: 62 },
+  { x: 370, y: 194 },
 ];
-const CALLS = ["whatsapp.responder()", "crm.atualizar(lead)", "agenda.livre('sáb')", "rag.buscar(unidade)"];
 
 const edge = (t: { x: number; y: number }) => {
   const mx = (CORE.x + t.x) / 2;
@@ -18,8 +18,11 @@ const edge = (t: { x: number; y: number }) => {
 };
 
 /** Agentes de IA: a core that dispatches packets to its tools and gets answers back. */
-export function AgentGraph() {
+export function AgentGraph({ lang = "pt" }: { lang?: Lang }) {
   const ref = useRef<SVGSVGElement>(null);
+  const viz = dict(lang).serviceViz;
+  const calls = viz.agentCalls;
+  const labels = viz.agentTools;
 
   useEffect(() => {
     const svg = ref.current;
@@ -63,13 +66,13 @@ export function AgentGraph() {
         rings[r].setAttribute("r", (24 + k * 46).toFixed(1));
         rings[r].style.opacity = String((1 - k) * 0.5 * intro);
       }
-      const c = Math.floor(clock * 0.32 * 4 + 0.5) % CALLS.length;
+      const c = Math.floor(clock * 0.32 * 4 + 0.5) % calls.length;
       if (call && c !== lastCall) {
         lastCall = c;
-        call.textContent = `> ${CALLS[c]}`;
+        call.textContent = `> ${calls[c]}`;
       }
     });
-  }, []);
+  }, [calls]);
 
   return (
     <svg ref={ref} viewBox="0 0 440 250" className="h-full w-full" aria-hidden preserveAspectRatio="xMidYMid meet">
@@ -84,7 +87,7 @@ export function AgentGraph() {
       </defs>
 
       {TOOLS.map((t, i) => (
-        <g key={t.label}>
+        <g key={i}>
           <path data-edge d={edge(t)} fill="none" stroke="rgb(190 255 215 / .16)" strokeWidth="1" />
           <path
             data-flow
@@ -115,20 +118,20 @@ export function AgentGraph() {
       />
       <circle cx={CORE.x} cy={CORE.y} r="3.2" fill="#b9ff4b" />
 
-      {TOOLS.map((t) => (
-        <g key={t.label} data-packet className="sa-packet" style={{ opacity: 0 }}>
+      {TOOLS.map((_, i) => (
+        <g key={i} data-packet className="sa-packet" style={{ opacity: 0 }}>
           <circle r="7" fill="currentColor" opacity=".25" filter="url(#sa-ag-blur)" />
           <circle r="3" fill="currentColor" />
         </g>
       ))}
 
       {TOOLS.map((t, i) => (
-        <g key={t.label} data-tool style={{ opacity: 0.0001 }} transform={`translate(${t.x} ${t.y})`}>
+        <g key={i} data-tool style={{ opacity: 0.0001 }} transform={`translate(${t.x} ${t.y})`}>
           <rect data-glow x="-44" y="-14" width="88" height="28" rx="14" fill="#b9ff4b" opacity=".15" filter="url(#sa-ag-blur)" />
           <rect x="-44" y="-14" width="88" height="28" rx="14" fill="#0a130e" stroke="rgb(190 255 215 / .3)" />
           <circle cx="-30" cy="0" r="3" fill={i % 2 ? "#3ef2c4" : "#b9ff4b"} />
           <text x="-21" y="3.6" fill="#eef4ee" fontSize="10" fontFamily="var(--font-mono)" letterSpacing=".02em">
-            {t.label}
+            {labels[i]}
           </text>
         </g>
       ))}
@@ -143,7 +146,7 @@ export function AgentGraph() {
         fontFamily="var(--font-mono)"
         letterSpacing=".04em"
       >
-        {`> ${CALLS[0]}`}
+        {`> ${calls[0]}`}
       </text>
       <style>{`.sa-packet{color:#b9ff4b;transition:color .3s}.sa-packet[data-dir="in"]{color:#3ef2c4}`}</style>
     </svg>

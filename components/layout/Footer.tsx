@@ -1,46 +1,60 @@
 import Link from "next/link";
 import { Logo } from "@/components/ui/Logo";
-import { NAV, SITE } from "@/content/site";
+import { SEGMENT_HREFS, SEGMENT_LIST, SEGMENT_UI } from "@/content/segments";
+import { DEMOS, NAV, SITE } from "@/content/site";
+import { dict, sectionHref, t, type Lang } from "@/lib/i18n";
 
-export function Footer() {
+export function Footer({ lang = "pt" }: { lang?: Lang }) {
+  const d = dict(lang).footer;
+  const hrefs = SEGMENT_HREFS[lang];
   return (
     <footer className="relative z-10 overflow-hidden border-t border-line px-[var(--pad)] pt-16 pb-8">
-      <div className="grid gap-12 md:grid-cols-[1.4fr_1fr_1fr]">
-        <div>
+      <div className="grid grid-cols-1 gap-12 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1fr]">
+        <div className="sm:col-span-2 lg:col-span-1">
           <Logo />
-          <p className="mt-5 max-w-[34ch] text-[15px] text-mute">{SITE.description}</p>
+          <p className="mt-5 max-w-[34ch] text-[15px] text-mute">{t(SITE.description, lang)}</p>
         </div>
-        <nav aria-label="Rodapé">
-          <p className="label mb-4 text-mute">Navegar</p>
+        <nav aria-label={d.label}>
+          <p className="label mb-4 text-mute">{d.navigate}</p>
           <ul className="grid gap-2 text-[15px]">
             {NAV.map((item) => (
-              <li key={item.href}>
-                <a href={item.href} className="text-mute transition-colors hover:text-acc">
-                  {item.label}
+              <li key={item.id}>
+                <a href={sectionHref(item.id, lang)} className="text-mute transition-colors hover:text-acc">
+                  {t(item.label, lang)}
                 </a>
               </li>
             ))}
           </ul>
         </nav>
-        <div>
-          <p className="label mb-4 text-mute">Demos</p>
+        <nav aria-labelledby="footer-solucoes">
+          <p id="footer-solucoes" className="label mb-4 text-mute">
+            {t(SEGMENT_UI.solutions, lang)}
+          </p>
           <ul className="grid gap-2 text-[15px]">
+            {SEGMENT_LIST.map((segment) => (
+              <li key={segment.id}>
+                <Link href={hrefs.segment(segment.id)} className="text-mute transition-colors hover:text-acc">
+                  {t(segment.name, lang)}
+                </Link>
+              </li>
+            ))}
             <li>
-              <Link href="/demos/imobiliarias" className="text-mute transition-colors hover:text-acc">
-                Imobiliárias — Aurora
+              <Link href={hrefs.index} className="text-mute/80 transition-colors hover:text-acc">
+                {t(SEGMENT_UI.nav.all, lang)} →
               </Link>
             </li>
-            <li className="text-mute/80">Clínicas · em breve</li>
-            <li>
-              <Link href="/demos/restaurantes" className="text-mute transition-colors hover:text-acc">
-                Restaurantes — Maré
-              </Link>
-            </li>
-            <li>
-              <Link href="/demos/ecommerce" className="text-mute transition-colors hover:text-acc">
-                E-commerce — Pulso
-              </Link>
-            </li>
+          </ul>
+        </nav>
+        <div>
+          <p className="label mb-4 text-mute">{d.demos}</p>
+          <ul className="grid gap-2 text-[15px]">
+            {DEMOS.map((demo) => (
+              <li key={demo.id}>
+                <Link href={demo.href} className="text-mute transition-colors hover:text-acc">
+                  {t(demo.segment, lang)} — {demo.brand}
+                </Link>
+              </li>
+            ))}
           </ul>
         </div>
       </div>
@@ -56,7 +70,7 @@ export function Footer() {
         <span>
           © {SITE.year} {SITE.name}
         </span>
-        <span>{SITE.tagline}</span>
+        <span>{t(SITE.tagline, lang)}</span>
       </div>
     </footer>
   );
