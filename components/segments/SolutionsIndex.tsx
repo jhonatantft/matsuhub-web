@@ -102,9 +102,14 @@ export function SolutionsIndex({ lang = "pt", hrefs = SEGMENT_HREFS_PT }: { lang
               <h2 className="h-card">{t(ui.otherTitle, lang)}</h2>
               <p className="mt-2 max-w-[56ch] text-[15px] text-mute">{t(ui.otherText, lang)}</p>
             </div>
-            <Button href={hrefs.contact} className="max-sm:w-full">
-              {t(ui.otherCta, lang)}
-            </Button>
+            <div className="flex flex-wrap gap-3 max-sm:w-full max-sm:flex-col">
+              <Button href={hrefs.custom} className="max-sm:w-full">
+                {t(ui.otherCta, lang)}
+              </Button>
+              <Button href={hrefs.contact} variant="ghost" className="max-sm:w-full">
+                {t(ui.otherContact, lang)}
+              </Button>
+            </div>
           </div>
         </Reveal>
       </section>

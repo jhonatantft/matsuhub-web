@@ -4,17 +4,17 @@ import { SEGMENT_UI, t, type Lang, type SegmentHrefs } from "@/content/segments"
 import { SplitHeader } from "./SplitHeader";
 
 /** "05 — Como funciona": the four phases of PROCESS as a compact timeline, linking to the full stage on the homepage. */
-export function SegmentProcess({ lang, hrefs }: { lang: Lang; hrefs: SegmentHrefs }) {
+export function SegmentProcess({ lang, hrefs, label, title }: { lang: Lang; hrefs: SegmentHrefs; label?: string; title?: string }) {
   const ui = SEGMENT_UI.process;
   return (
     <section aria-labelledby="processo-title" className="relative px-[var(--pad)] py-[clamp(64px,8vw,120px)]">
       <div className="mx-auto max-w-[1360px]">
         <SplitHeader
           id="processo-title"
-          label={t(ui.label, lang)}
+          label={label ?? t(ui.label, lang)}
           title={
             <>
-              {t(ui.title, lang)} <span className="text-gradient">{t(ui.accent, lang)}</span>
+              {title ?? t(ui.title, lang)} <span className="text-gradient">{t(ui.accent, lang)}</span>
             </>
           }
           lead={t(ui.lead, lang)}

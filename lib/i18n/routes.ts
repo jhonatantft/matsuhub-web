@@ -7,12 +7,13 @@ import { HOME_PATH } from "./sections";
  * switcher, hreflang alternates and the sitemap all read this. Demos, labs and APIs are
  * single-language and stay out of it.
  */
-export type PageKey = "home" | "solutions" | SegmentId;
-export const PAGE_KEYS: readonly PageKey[] = ["home", "solutions", ...SEGMENT_IDS];
+export type PageKey = "home" | "solutions" | "custom" | SegmentId;
+export const PAGE_KEYS: readonly PageKey[] = ["home", "solutions", ...SEGMENT_IDS, "custom"];
 
 export function pagePath(key: PageKey, lang: Lang): string {
   if (key === "home") return HOME_PATH[lang];
   if (key === "solutions") return SEGMENT_HREFS[lang].index;
+  if (key === "custom") return SEGMENT_HREFS[lang].custom;
   return SEGMENT_HREFS[lang].segment(key);
 }
 

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { fill, SEGMENT_LIST, SEGMENT_UI, segmentById, t, type Lang, type SegmentId } from "@/content/segments";
+import { CUSTOM } from "@/content/custom";
 import { pageMetadata } from "@/lib/i18n/metadata";
 import { segmentOgImage } from "./og";
 
@@ -49,5 +50,19 @@ export function segmentOg(id: SegmentId, lang: Lang = "pt") {
     title: t(segment.hero.title, lang),
     accent: t(segment.hero.accent, lang),
     chips: segment.hero.chips.map((chip) => t(chip, lang)),
+  });
+}
+
+/** The custom-builds page (content/custom.ts). */
+export function customMetadata(lang: Lang = "pt"): Metadata {
+  return pageMetadata("custom", lang, { title: t(CUSTOM.meta.title, lang), description: t(CUSTOM.meta.description, lang) });
+}
+
+export function customOg(lang: Lang = "pt") {
+  return segmentOgImage({
+    kicker: t(CUSTOM.meta.ogKicker, lang),
+    title: t(CUSTOM.hero.title, lang),
+    accent: t(CUSTOM.hero.accent, lang),
+    chips: CUSTOM.hero.chips.map((chip) => t(chip, lang)),
   });
 }

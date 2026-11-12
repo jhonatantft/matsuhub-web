@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Logo } from "@/components/ui/Logo";
+import { CUSTOM } from "@/content/custom";
 import { SEGMENT_HREFS, SEGMENT_LIST, SEGMENT_UI } from "@/content/segments";
 import { DEMOS, NAV, SITE } from "@/content/site";
 import { dict, sectionHref, t, type Lang } from "@/lib/i18n";
@@ -38,6 +39,11 @@ export function Footer({ lang = "pt" }: { lang?: Lang }) {
                 </Link>
               </li>
             ))}
+            <li>
+              <Link href={hrefs.custom} className="text-mute transition-colors hover:text-acc">
+                {t(CUSTOM.name, lang)}
+              </Link>
+            </li>
             <li>
               <Link href={hrefs.index} className="text-mute/80 transition-colors hover:text-acc">
                 {t(SEGMENT_UI.nav.all, lang)} →

@@ -10,6 +10,7 @@ import { HOME_PATH, sectionHref } from "@/lib/i18n/sections";
 import type { Lang, Localized } from "@/lib/i18n/core";
 import { AURORA } from "./aurora";
 import { ELO } from "./clinica";
+import { CUSTOM_SLUG } from "./custom";
 import { MARE } from "./mare";
 import { PULSO } from "./pulso";
 import { PROCESS } from "./site";
@@ -1183,12 +1184,13 @@ export const SEGMENT_UI = {
     open: { pt: "Ver a solução", en: "See the solution" },
     demo: { pt: "demo", en: "demo" },
     agent: { pt: "agente", en: "agent" },
-    otherTitle: { pt: "Seu segmento não está aqui?", en: "Don't see your industry?" },
+    otherTitle: { pt: "Não está na lista? Melhor ainda.", en: "Not on the list? Even better." },
     otherText: {
-      pt: "Estes quatro já têm demo. Construímos sob medida para outros negócios também — conte o seu caso.",
-      en: "These four already have demos. We build custom for other businesses too — tell us about yours.",
+      pt: "Estes quatro já têm demo. Fora deles, construímos qualquer software sob medida: plataformas, apps, integrações, dados, cloud e IA.",
+      en: "These four already have demos. Beyond them, we build any custom software: platforms, apps, integrations, data, cloud and AI.",
     },
-    otherCta: { pt: "Falar sobre o meu negócio", en: "Talk about my business" },
+    otherCta: { pt: "Ver software sob medida", en: "See custom software" },
+    otherContact: { pt: "Falar sobre o meu negócio", en: "Talk about my business" },
   },
   nav: {
     menu: { pt: "Soluções", en: "Solutions" },
@@ -1210,6 +1212,8 @@ export type SegmentHrefs = {
   /** The solutions index (/solucoes · /en/solutions). */
   index: string;
   segment: (id: SegmentId) => string;
+  /** The custom-builds page (/solucoes/sob-medida · /en/solutions/custom), content/custom.ts. */
+  custom: string;
   /** A demo page, optionally at an anchor ("#plantas"). The demos are Portuguese-only. */
   demo: (id: SegmentId, anchor?: string) => string;
   /** The homepage contact form and process section. */
@@ -1221,6 +1225,7 @@ const hrefsFor = (lang: Lang, index: string): SegmentHrefs => ({
   home: HOME_PATH[lang],
   index,
   segment: (id) => `${index}/${segmentById(id).slug[lang]}`,
+  custom: `${index}/${CUSTOM_SLUG[lang]}`,
   demo: (id, anchor = "") => `${segmentById(id).demo.href}${anchor}`,
   contact: sectionHref("contact", lang),
   process: sectionHref("process", lang),

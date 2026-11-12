@@ -6,6 +6,7 @@ import { Fragment, useEffect, useRef, useState } from "react";
 import { LangSwitch } from "@/components/layout/LangSwitch";
 import { Button } from "@/components/ui/Button";
 import { Logo } from "@/components/ui/Logo";
+import { CUSTOM } from "@/content/custom";
 import { SEGMENT_HREFS, SEGMENT_LIST, SEGMENT_UI } from "@/content/segments";
 import { NAV } from "@/content/site";
 import { cn } from "@/lib/cn";
@@ -187,6 +188,41 @@ export function Nav({ lang = "pt" }: { lang?: Lang }) {
                           ))}
                         </ul>
                         <Link
+                          href={hrefs.custom}
+                          onClick={() => setSolutionsAt(null)}
+                          aria-current={pathname === hrefs.custom ? "page" : undefined}
+                          className="group/item relative flex items-center gap-3 overflow-hidden border-t border-line px-5 py-4 transition-colors hover:bg-acc/[0.06] focus-visible:bg-acc/[0.06] focus-visible:outline-offset-[-2px]"
+                        >
+                          <span
+                            aria-hidden
+                            className="pointer-events-none absolute inset-0 [background-image:linear-gradient(rgb(185_255_75/0.06)_1px,transparent_1px),linear-gradient(90deg,rgb(185_255_75/0.06)_1px,transparent_1px)] [background-size:18px_18px] [mask-image:linear-gradient(90deg,transparent_35%,black)]"
+                          />
+                          <span className="relative mt-0.5 self-start font-mono text-[10.5px] text-acc">05</span>
+                          <span className="relative min-w-0 flex-1">
+                            <span className="flex items-center gap-1.5 font-display text-[15px] font-semibold tracking-[-0.01em] text-ink group-hover/item:text-acc group-aria-[current=page]/item:text-acc">
+                              {t(CUSTOM.name, lang)}
+                              <span aria-hidden className="text-acc opacity-0 transition-[opacity,translate] duration-300 group-hover/item:translate-x-0.5 group-hover/item:opacity-100">
+                                →
+                              </span>
+                            </span>
+                            <span className="mt-1 block text-[13px] leading-snug text-mute">{t(CUSTOM.nav, lang)}</span>
+                            <span className="mt-2 block font-mono text-[10.5px] tracking-[0.1em] text-acc-2/80 uppercase">{t(CUSTOM.navTags, lang)}</span>
+                          </span>
+                          <svg aria-hidden viewBox="0 0 64 44" className="relative hidden h-11 w-16 shrink-0 text-acc sm:block">
+                            <path d="M12 22h14M38 22l12-12M38 22l12 12M26 22h12" fill="none" stroke="currentColor" strokeOpacity="0.45" strokeWidth="1.2" />
+                            <rect x="2" y="16" width="12" height="12" rx="3" fill="none" stroke="currentColor" strokeWidth="1.2" />
+                            <rect x="26" y="16" width="12" height="12" rx="3" fill="currentColor" fillOpacity="0.18" stroke="currentColor" strokeWidth="1.2" />
+                            <rect x="50" y="4" width="12" height="12" rx="3" fill="none" stroke="currentColor" strokeWidth="1.2" />
+                            <rect x="50" y="28" width="12" height="12" rx="3" fill="none" stroke="currentColor" strokeWidth="1.2" />
+                            <circle r="1.8" fill="currentColor" className="motion-reduce:hidden">
+                              <animateMotion dur="2.4s" repeatCount="indefinite" path="M8 22H32L56 10" />
+                            </circle>
+                            <circle r="1.8" fill="var(--color-acc-2)" className="motion-reduce:hidden">
+                              <animateMotion dur="2.4s" begin="1.2s" repeatCount="indefinite" path="M8 22H32L56 34" />
+                            </circle>
+                          </svg>
+                        </Link>
+                        <Link
                           href={hrefs.index}
                           onClick={() => setSolutionsAt(null)}
                           className="flex items-center justify-between border-t border-line px-5 py-3.5 font-mono text-[11px] tracking-[0.12em] text-acc uppercase transition-colors hover:bg-acc/[0.06] focus-visible:outline-offset-[-2px]"
@@ -275,6 +311,21 @@ export function Nav({ lang = "pt" }: { lang?: Lang }) {
                   </Link>
                 </li>
               ))}
+              <li>
+                <Link
+                  href={hrefs.custom}
+                  onClick={() => setOpen(false)}
+                  className="flex items-center justify-between gap-4 border-b border-line py-3.5"
+                >
+                  <span className="min-w-0">
+                    <span className="block font-display text-[19px] font-semibold tracking-[-0.01em]">{t(CUSTOM.name, lang)}</span>
+                    <span className="mt-0.5 block text-[13.5px] leading-snug text-mute">{t(CUSTOM.nav, lang)}</span>
+                  </span>
+                  <span aria-hidden className="text-acc">
+                    →
+                  </span>
+                </Link>
+              </li>
               <li>
                 <Link
                   href={hrefs.index}

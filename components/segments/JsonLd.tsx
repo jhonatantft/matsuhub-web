@@ -1,4 +1,5 @@
 import { SEGMENT_LIST, SEGMENT_UI, t, type Lang, type Segment, type SegmentHrefs } from "@/content/segments";
+import { CUSTOM } from "@/content/custom";
 import { SITE } from "@/content/site";
 import { HOME_PATH } from "@/lib/i18n/sections";
 import { HTML_LANG } from "@/lib/i18n/core";
@@ -87,6 +88,40 @@ export function segmentJsonLd(segment: Segment, lang: Lang, hrefs: SegmentHrefs,
       },
       breadcrumbs(base, lang, hrefs, { name: t(segment.name, lang), url }),
       webPage(url, t(segment.meta.title, lang), t(segment.meta.description, lang), lang, base),
+    ],
+  };
+}
+
+/** Service + FAQPage + BreadcrumbList for the custom-builds page (content/custom.ts). */
+export function customJsonLd(lang: Lang, hrefs: SegmentHrefs, base: string) {
+  const url = `${base}${hrefs.custom}`;
+  return {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Service",
+        "@id": `${url}#service`,
+        name: t(CUSTOM.meta.service, lang),
+        serviceType: t(CUSTOM.meta.service, lang),
+        description: t(CUSTOM.meta.description, lang),
+        url,
+        provider: provider(base, lang),
+        areaServed: area(lang),
+        availableChannel: { "@type": "ServiceChannel", serviceUrl: `${base}${hrefs.contact}` },
+      },
+      {
+        "@type": "FAQPage",
+        "@id": `${url}#faq`,
+        url,
+        inLanguage: inLanguage(lang),
+        mainEntity: CUSTOM.faq.items.map((item) => ({
+          "@type": "Question",
+          name: t(item.q, lang),
+          acceptedAnswer: { "@type": "Answer", text: t(item.a, lang) },
+        })),
+      },
+      breadcrumbs(base, lang, hrefs, { name: t(CUSTOM.name, lang), url }),
+      webPage(url, t(CUSTOM.meta.title, lang), t(CUSTOM.meta.description, lang), lang, base),
     ],
   };
 }

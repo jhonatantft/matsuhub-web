@@ -13,6 +13,7 @@ const PRIORITY: Record<PageKey, number> = {
   restaurantes: 0.9,
   ecommerce: 0.9,
   clinicas: 0.9,
+  custom: 0.9,
 };
 
 /**
