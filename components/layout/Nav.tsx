@@ -7,29 +7,38 @@ import { LangSwitch } from "@/components/layout/LangSwitch";
 import { Button } from "@/components/ui/Button";
 import { Logo } from "@/components/ui/Logo";
 import { CUSTOM } from "@/content/custom";
+import { LAB_EXPERIMENTS, LAB_HREFS, LAB_NOTES, LAB_UI, type LabItem } from "@/content/lab";
 import { SEGMENT_HREFS, SEGMENT_LIST, SEGMENT_UI } from "@/content/segments";
 import { NAV } from "@/content/site";
 import { cn } from "@/lib/cn";
 import { dict, HOME_PATH, sectionHref, t, type Lang } from "@/lib/i18n";
 import { lenisRef } from "@/lib/scroll";
 
-/** "Soluções" sits right after this section in the desktop nav. */
+/** "Soluções" and "Lab" sit right after this section in the desktop nav. */
 const SOLUTIONS_AFTER = "services";
+
+type MenuId = "solutions" | "lab";
 
 export function Nav({ lang = "pt" }: { lang?: Lang }) {
   const hrefs = SEGMENT_HREFS[lang];
+  const lab = LAB_HREFS[lang];
   const d = dict(lang);
   const nav = NAV.map((item) => ({ id: item.id, href: sectionHref(item.id, lang), label: t(item.label, lang) }));
   const pathname = usePathname();
   const [solid, setSolid] = useState(false);
   const [hidden, setHidden] = useState(false);
   const [open, setOpen] = useState(false);
-  /** The "Soluções" dropdown is open for the page it was opened on, so navigating closes it. */
-  const [solutionsAt, setSolutionsAt] = useState<string | null>(null);
-  const solutions = solutionsAt === pathname;
+  /** A dropdown is open for the page it was opened on, so navigating closes it. */
+  const [menuAt, setMenuAt] = useState<{ id: MenuId; path: string } | null>(null);
+  const openMenu = menuAt && menuAt.path === pathname ? menuAt.id : null;
+  const solutions = openMenu === "solutions";
+  const labOpen = openMenu === "lab";
   const lastY = useRef(0);
   const solutionsRef = useRef<HTMLLIElement>(null);
   const solutionsButton = useRef<HTMLButtonElement>(null);
+  const labRef = useRef<HTMLLIElement>(null);
+  const labButton = useRef<HTMLButtonElement>(null);
+  const menuRefs = { solutions: solutionsRef, lab: labRef };
   const hoverTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const openedByHover = useRef(false);
 
@@ -40,7 +49,7 @@ export function Nav({ lang = "pt" }: { lang?: Lang }) {
       setSolid(y > 24);
       if (y > 480 && y > lastY.current + 6) {
         setHidden(true);
-        setSolutionsAt(null);
+        setMenuAt(null);
       } else if (y < lastY.current - 6 || y <= 480) setHidden(false);
       lastY.current = y;
     };
@@ -64,16 +73,18 @@ export function Nav({ lang = "pt" }: { lang?: Lang }) {
     };
   }, [open]);
 
-  // Desktop dropdown: Escape closes and returns focus to the button; a press outside closes it.
+  // Desktop dropdowns: Escape closes and returns focus to the button; a press outside closes it.
   useEffect(() => {
-    if (!solutions) return;
+    if (!openMenu) return;
+    const li = openMenu === "lab" ? labRef : solutionsRef;
+    const button = openMenu === "lab" ? labButton : solutionsButton;
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== "Escape") return;
-      setSolutionsAt(null);
-      solutionsButton.current?.focus();
+      setMenuAt(null);
+      button.current?.focus();
     };
     const onDown = (e: PointerEvent) => {
-      if (!solutionsRef.current?.contains(e.target as Node)) setSolutionsAt(null);
+      if (!li.current?.contains(e.target as Node)) setMenuAt(null);
     };
     window.addEventListener("keydown", onKey);
     window.addEventListener("pointerdown", onDown);
@@ -81,35 +92,36 @@ export function Nav({ lang = "pt" }: { lang?: Lang }) {
       window.removeEventListener("keydown", onKey);
       window.removeEventListener("pointerdown", onDown);
     };
-  }, [solutions]);
+  }, [openMenu]);
 
   useEffect(() => () => clearTimeout(hoverTimer.current), []);
 
-  // Mouse users get the dropdown on hover too (with a short grace period on the way out).
-  const hoverOpen = (e: React.PointerEvent) => {
+  // Mouse users get a dropdown on hover too (with a short grace period on the way out).
+  const hoverOpen = (id: MenuId) => (e: React.PointerEvent) => {
     if (e.pointerType !== "mouse") return;
     clearTimeout(hoverTimer.current);
-    if (!solutions) openedByHover.current = true;
-    setSolutionsAt(pathname);
+    if (openMenu !== id) openedByHover.current = true;
+    setMenuAt({ id, path: pathname });
   };
   // A click right after hovering keeps the dropdown open instead of toggling it shut.
-  const onToggle = () => {
-    if (solutions && openedByHover.current) {
+  const onToggle = (id: MenuId) => () => {
+    if (openMenu === id && openedByHover.current) {
       openedByHover.current = false;
       return;
     }
     openedByHover.current = false;
-    setSolutionsAt(solutions ? null : pathname);
+    setMenuAt(openMenu === id ? null : { id, path: pathname });
   };
   const hoverClose = (e: React.PointerEvent) => {
     if (e.pointerType !== "mouse") return;
     clearTimeout(hoverTimer.current);
-    hoverTimer.current = setTimeout(() => setSolutionsAt(null), 160);
+    hoverTimer.current = setTimeout(() => setMenuAt(null), 160);
   };
-  // Tabbing out of the dropdown closes it.
-  const onBlur = (e: React.FocusEvent) => {
-    if (!solutionsRef.current?.contains(e.relatedTarget as Node | null)) setSolutionsAt(null);
+  // Tabbing out of a dropdown closes it.
+  const onBlur = (id: MenuId) => (e: React.FocusEvent) => {
+    if (!menuRefs[id].current?.contains(e.relatedTarget as Node | null)) setMenuAt(null);
   };
+  const close = () => setMenuAt(null);
 
   return (
     <header
@@ -121,7 +133,7 @@ export function Nav({ lang = "pt" }: { lang?: Lang }) {
       <div
         className={cn(
           "flex h-[var(--nav-h)] items-center justify-between border-b px-[var(--pad)] transition-colors duration-300",
-          solid || open || solutions ? "border-line bg-bg/80 backdrop-blur-md" : "border-transparent",
+          solid || open || openMenu ? "border-line bg-bg/80 backdrop-blur-md" : "border-transparent",
         )}
       >
         <Link href={HOME_PATH[lang]} aria-label={d.nav.home} className="rounded-sm">
@@ -129,7 +141,7 @@ export function Nav({ lang = "pt" }: { lang?: Lang }) {
         </Link>
 
         <nav aria-label={d.nav.main} className="hidden md:block">
-          <ul className="flex items-center gap-8 font-mono text-xs font-medium tracking-[0.1em] uppercase">
+          <ul className="flex items-center gap-6 font-mono lg:gap-8 text-xs font-medium tracking-[0.1em] uppercase">
             {nav.map((item) => (
               <Fragment key={item.href}>
                 <li>
@@ -138,13 +150,13 @@ export function Nav({ lang = "pt" }: { lang?: Lang }) {
                   </a>
                 </li>
                 {item.id === SOLUTIONS_AFTER && (
-                  <li ref={solutionsRef} className="relative" onPointerEnter={hoverOpen} onPointerLeave={hoverClose} onBlur={onBlur}>
+                  <li ref={solutionsRef} className="relative" onPointerEnter={hoverOpen("solutions")} onPointerLeave={hoverClose} onBlur={onBlur("solutions")}>
                     <button
                       ref={solutionsButton}
                       type="button"
                       aria-expanded={solutions}
                       aria-controls="nav-solucoes"
-                      onClick={onToggle}
+                      onClick={onToggle("solutions")}
                       className={cn(
                         "flex items-center gap-1.5 uppercase transition-colors hover:text-acc",
                         solutions || pathname.startsWith(hrefs.index) ? "text-acc" : "text-mute",
@@ -169,7 +181,7 @@ export function Nav({ lang = "pt" }: { lang?: Lang }) {
                             <li key={segment.id} className="bg-[rgb(7_13_10/0.96)]">
                               <Link
                                 href={hrefs.segment(segment.id)}
-                                onClick={() => setSolutionsAt(null)}
+                                onClick={close}
                                 aria-current={pathname === hrefs.segment(segment.id) ? "page" : undefined}
                                 className="group/item flex h-full gap-3 px-5 py-4 transition-colors hover:bg-acc/[0.06] focus-visible:bg-acc/[0.06] focus-visible:outline-offset-[-2px]"
                               >
@@ -189,7 +201,7 @@ export function Nav({ lang = "pt" }: { lang?: Lang }) {
                         </ul>
                         <Link
                           href={hrefs.custom}
-                          onClick={() => setSolutionsAt(null)}
+                          onClick={close}
                           aria-current={pathname === hrefs.custom ? "page" : undefined}
                           className="group/item relative flex items-center gap-3 overflow-hidden border-t border-line px-5 py-4 transition-colors hover:bg-acc/[0.06] focus-visible:bg-acc/[0.06] focus-visible:outline-offset-[-2px]"
                         >
@@ -224,10 +236,72 @@ export function Nav({ lang = "pt" }: { lang?: Lang }) {
                         </Link>
                         <Link
                           href={hrefs.index}
-                          onClick={() => setSolutionsAt(null)}
+                          onClick={close}
                           className="flex items-center justify-between border-t border-line px-5 py-3.5 font-mono text-[11px] tracking-[0.12em] text-acc uppercase transition-colors hover:bg-acc/[0.06] focus-visible:outline-offset-[-2px]"
                         >
                           {t(SEGMENT_UI.nav.all, lang)}
+                          <span aria-hidden>→</span>
+                        </Link>
+                      </div>
+                    </div>
+                  </li>
+                )}
+                {item.id === SOLUTIONS_AFTER && (
+                  <li ref={labRef} className="relative" onPointerEnter={hoverOpen("lab")} onPointerLeave={hoverClose} onBlur={onBlur("lab")}>
+                    <button
+                      ref={labButton}
+                      type="button"
+                      aria-expanded={labOpen}
+                      aria-controls="nav-lab"
+                      onClick={onToggle("lab")}
+                      className={cn(
+                        "flex items-center gap-1.5 uppercase transition-colors hover:text-acc",
+                        labOpen || pathname.startsWith(lab.index) ? "text-acc" : "text-mute",
+                      )}
+                    >
+                      {t(LAB_UI.name, lang)}
+                      <svg aria-hidden viewBox="0 0 10 6" className={cn("h-1.5 w-2.5 transition-transform duration-300", labOpen && "rotate-180")}>
+                        <path d="m1 1 4 4 4-4" fill="none" stroke="currentColor" strokeWidth="1.4" />
+                      </svg>
+                    </button>
+                    <div id="nav-lab" hidden={!labOpen} className="absolute top-full left-1/2 w-[min(560px,calc(100vw-2*var(--pad)))] -translate-x-1/2 pt-5">
+                      <div className="overflow-hidden rounded-[20px] border border-line-2 bg-[rgb(7_13_10/0.97)] font-sans tracking-normal normal-case shadow-[0_40px_100px_-40px_rgb(0_0_0/0.9),0_30px_90px_-60px_rgb(62_242_196/0.45)] backdrop-blur-xl">
+                        <p className="border-b border-line px-5 py-3 font-mono text-[10.5px] tracking-[0.16em] text-mute uppercase">{t(LAB_UI.nav.heading, lang)}</p>
+                        <div className="grid grid-cols-2 gap-px bg-line">
+                          {(
+                            [
+                              [LAB_UI.nav.experiments, LAB_EXPERIMENTS],
+                              [LAB_UI.nav.notes, LAB_NOTES],
+                            ] as const
+                          ).map(([heading, items]) => (
+                            <div key={heading.pt} className="bg-[rgb(7_13_10/0.96)] p-2">
+                              <p className="px-3 pt-2 pb-1 font-mono text-[10px] tracking-[0.14em] text-acc uppercase">{t(heading, lang)}</p>
+                              <ul>
+                                {items.map((item: LabItem) => (
+                                  <li key={item.id}>
+                                    <Link
+                                      href={lab.item(item.id)}
+                                      onClick={close}
+                                      aria-current={pathname === lab.item(item.id) ? "page" : undefined}
+                                      className="group/item block rounded-[12px] px-3 py-2.5 transition-colors hover:bg-acc/[0.06] focus-visible:bg-acc/[0.06] focus-visible:outline-offset-[-2px]"
+                                    >
+                                      <span className="block font-display text-[14px] leading-snug font-semibold tracking-[-0.01em] text-ink group-hover/item:text-acc group-aria-[current=page]/item:text-acc">
+                                        {t(item.title, lang)} {t(item.accent, lang)}
+                                      </span>
+                                      <span className="mt-1 block font-mono text-[10px] tracking-[0.08em] text-mute/80 uppercase">{item.tags.slice(0, 3).join(" · ")}</span>
+                                    </Link>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          ))}
+                        </div>
+                        <Link
+                          href={lab.index}
+                          onClick={close}
+                          className="flex items-center justify-between border-t border-line px-5 py-3.5 font-mono text-[11px] tracking-[0.12em] text-acc uppercase transition-colors hover:bg-acc/[0.06] focus-visible:outline-offset-[-2px]"
+                        >
+                          {t(LAB_UI.nav.all, lang)}
                           <span aria-hidden>→</span>
                         </Link>
                       </div>
@@ -333,6 +407,39 @@ export function Nav({ lang = "pt" }: { lang?: Lang }) {
                   className="flex items-center justify-between py-4 font-mono text-[11px] tracking-[0.12em] text-acc uppercase"
                 >
                   {t(SEGMENT_UI.nav.all, lang)}
+                  <span aria-hidden>→</span>
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          <div className="mt-10">
+            <p id="mobile-lab" className="label">
+              {t(LAB_UI.name, lang)}
+            </p>
+            <ul aria-labelledby="mobile-lab" className="mt-3 grid grid-cols-1">
+              {[...LAB_EXPERIMENTS, ...LAB_NOTES].map((item) => (
+                <li key={item.id}>
+                  <Link href={lab.item(item.id)} onClick={() => setOpen(false)} className="flex items-center justify-between gap-4 border-b border-line py-3.5">
+                    <span className="min-w-0">
+                      <span className="block font-display text-[17px] leading-snug font-semibold tracking-[-0.01em]">
+                        {t(item.title, lang)} {t(item.accent, lang)}
+                      </span>
+                      <span className="mt-0.5 block font-mono text-[10.5px] tracking-[0.08em] text-mute uppercase">{t(LAB_UI.kind[item.kind], lang)}</span>
+                    </span>
+                    <span aria-hidden className="text-acc">
+                      →
+                    </span>
+                  </Link>
+                </li>
+              ))}
+              <li>
+                <Link
+                  href={lab.index}
+                  onClick={() => setOpen(false)}
+                  className="flex items-center justify-between py-4 font-mono text-[11px] tracking-[0.12em] text-acc uppercase"
+                >
+                  {t(LAB_UI.nav.all, lang)}
                   <span aria-hidden>→</span>
                 </Link>
               </li>

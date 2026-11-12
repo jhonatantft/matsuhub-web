@@ -14,6 +14,11 @@ const PRIORITY: Record<PageKey, number> = {
   ecommerce: 0.9,
   clinicas: 0.9,
   custom: 0.9,
+  lab: 0.7,
+  "load-test": 0.6,
+  "semantic-search": 0.6,
+  "one-loop": 0.6,
+  "public-forms": 0.6,
 };
 
 /**
