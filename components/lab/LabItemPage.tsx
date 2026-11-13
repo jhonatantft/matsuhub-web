@@ -32,7 +32,7 @@ export function LabItemPage({ id, lang, children }: { id: LabId; lang: Lang; chi
           "@context": "https://schema.org",
           "@graph": [
             {
-              "@type": isNote ? "TechArticle" : "WebPage",
+              "@type": isNote ? "TechArticle" : item.kind === "explainer" ? "LearningResource" : "WebPage",
               headline: title,
               name: title,
               description: t(item.summary, lang),

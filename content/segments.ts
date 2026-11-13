@@ -1196,6 +1196,7 @@ export const SEGMENT_UI = {
     menu: { pt: "Soluções", en: "Solutions" },
     heading: { pt: "Site + IA por segmento", en: "Website + AI by industry" },
     all: { pt: "Ver todas as soluções", en: "See all solutions" },
+    demo: { pt: "Demo ao vivo", en: "Live demo" },
   },
   og: {
     kicker: { pt: "Site + IA para {segment}", en: "Website + AI for {segment}" },

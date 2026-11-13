@@ -1,7 +1,7 @@
 import { JsonLd } from "@/components/segments/JsonLd";
 import { SplitHeader } from "@/components/segments/SplitHeader";
 import { Reveal } from "@/components/ui/Reveal";
-import { LAB_EXPERIMENTS, LAB_HREFS, LAB_ITEMS, LAB_NOTES, LAB_UI } from "@/content/lab";
+import { LAB_EXPERIMENTS, LAB_EXPLAINERS, LAB_HREFS, LAB_ITEMS, LAB_NOTES, LAB_UI } from "@/content/lab";
 import { SITE } from "@/content/site";
 import { HTML_LANG, t, type Lang } from "@/lib/i18n";
 import { siteUrl } from "@/lib/site-url";
@@ -27,7 +27,7 @@ export function LabIndex({ lang }: { lang: Lang }) {
           url: `${base}${hrefs.index}`,
           publisher: { "@type": "Organization", name: SITE.name, url: base },
           hasPart: LAB_ITEMS.map((item) => ({
-            "@type": item.kind === "note" ? "TechArticle" : "WebPage",
+            "@type": item.kind === "note" ? "TechArticle" : item.kind === "explainer" ? "LearningResource" : "WebPage",
             name: `${t(item.title, lang)} ${t(item.accent, lang)}`,
             url: `${base}${hrefs.item(item.id)}`,
           })),
@@ -63,6 +63,19 @@ export function LabIndex({ lang }: { lang: Lang }) {
           </Reveal>
         </div>
       </header>
+
+      <section aria-labelledby="lab-learn-title" className={section}>
+        <div className="mx-auto max-w-[1360px]">
+          <SplitHeader id="lab-learn-title" label={t(ui.explainersLabel, lang)} title={t(ui.explainersTitle, lang)} lead={t(ui.explainersLead, lang)} />
+          <ul className="mt-10 grid grid-cols-1 gap-5 md:grid-cols-2 lg:mt-14 lg:grid-cols-3">
+            {LAB_EXPLAINERS.map((item, i) => (
+              <Reveal as="li" key={item.id} delay={0.08 * i}>
+                <LabCard item={item} lang={lang} />
+              </Reveal>
+            ))}
+          </ul>
+        </div>
+      </section>
 
       <section aria-labelledby="lab-exp-title" className={section}>
         <div className="mx-auto max-w-[1360px]">

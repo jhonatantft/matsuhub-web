@@ -78,6 +78,70 @@ export function LabBody({ blocks, lang }: { blocks: readonly LabBlock[]; lang: L
 
 /** Small line drawing of each experiment for the cards. */
 export function LabArt({ id }: { id: LabId }) {
+  if (id === "password")
+    return (
+      <svg aria-hidden viewBox="0 0 240 150" className="h-full w-full">
+        <rect x="96" y="58" width="48" height="40" rx="8" fill="rgb(185 255 75 / 0.08)" stroke="currentColor" strokeOpacity="0.7" />
+        <path d="M106 58V46a14 14 0 0 1 28 0v12" fill="none" stroke="currentColor" strokeOpacity="0.7" strokeWidth="1.5" />
+        <circle cx="120" cy="76" r="4" fill="var(--color-acc)" />
+        {[
+          [30, 0.18, "var(--color-danger)"],
+          [52, 0.46, "var(--color-warm)"],
+          [74, 0.9, "var(--color-acc)"],
+        ].map(([y, w, c], i) => (
+          <g key={i} transform={`translate(0 ${Number(y) + 82})`}>
+            <rect x="40" y="0" width="160" height="5" rx="2.5" fill="currentColor" fillOpacity="0.12" />
+            <rect x="40" y="0" width={160 * Number(w)} height="5" rx="2.5" fill={String(c)} className="origin-left motion-safe:animate-[grow_2.4s_var(--ease-soft)_infinite]" style={{ animationDelay: `${i * 0.25}s` }} />
+          </g>
+        ))}
+        {[0, 1, 2, 3, 4, 5].map((k) => (
+          <rect key={k} x={66 + k * 19} y="18" width="13" height="16" rx="3" fill="none" stroke="currentColor" strokeOpacity={0.25 + k * 0.1} />
+        ))}
+      </svg>
+    );
+  if (id === "one-click")
+    return (
+      <svg aria-hidden viewBox="0 0 240 150" className="h-full w-full">
+        {[
+          [24, 10, 18, "var(--color-acc-2)"],
+          [42, 28, 30, "var(--color-acc)"],
+          [60, 58, 28, "var(--color-warm)"],
+          [78, 86, 44, "var(--color-danger)"],
+          [96, 130, 26, "var(--color-acc-2)"],
+          [114, 156, 58, "var(--color-acc)"],
+        ].map(([y, x, w, c], i) => (
+          <g key={i}>
+            <rect x="24" y={Number(y)} width="192" height="8" rx="4" fill="currentColor" fillOpacity="0.07" />
+            <rect x={24 + Number(x)} y={Number(y)} width={Number(w)} height="8" rx="4" fill={String(c)} fillOpacity="0.85" />
+          </g>
+        ))}
+        <line x1="24" y1="16" x2="24" y2="128" stroke="var(--color-ink)" strokeWidth="1.5" className="motion-reduce:hidden">
+          <animate attributeName="x1" values="24;216" dur="3.2s" repeatCount="indefinite" />
+          <animate attributeName="x2" values="24;216" dur="3.2s" repeatCount="indefinite" />
+        </line>
+      </svg>
+    );
+  if (id === "next-word")
+    return (
+      <svg aria-hidden viewBox="0 0 240 150" className="h-full w-full">
+        {[52, 34, 70, 44].map((w, i, all) => {
+          const x = 28 + all.slice(0, i).reduce((sum, v) => sum + v + 8, 0);
+          return <rect key={i} x={x} y="32" width={w} height="14" rx="4" fill="currentColor" fillOpacity={0.55 - i * 0.08} />;
+        })}
+        <rect x="258" y="30" width="3" height="18" rx="1.5" fill="var(--color-acc)" className="motion-safe:animate-blink" transform="translate(-30 0)" />
+        {[
+          [0.58, "var(--color-acc)", 30],
+          [0.27, "var(--color-acc-2)", 40],
+          [0.15, "var(--color-warm)", 24],
+        ].map(([p, c, w], i) => (
+          <g key={i} transform={`translate(28 ${74 + i * 22})`}>
+            <rect x="0" y="1" width={Number(w)} height="10" rx="3" fill={String(c)} fillOpacity="0.8" />
+            <rect x="52" y="3" width="132" height="6" rx="3" fill="currentColor" fillOpacity="0.1" />
+            <rect x="52" y="3" width={132 * Number(p)} height="6" rx="3" fill={String(c)} />
+          </g>
+        ))}
+      </svg>
+    );
   if (id === "load-test")
     return (
       <svg aria-hidden viewBox="0 0 240 150" className="h-full w-full">
@@ -156,7 +220,7 @@ export function LabCard({ item, lang, big = false }: { item: LabItem; lang: Lang
           ))}
         </span>
         <span className="font-mono text-[11px] tracking-[0.12em] text-acc uppercase">
-          {t(isNote ? LAB_UI.index.read : LAB_UI.index.open, lang)} <span aria-hidden className="inline-block transition-transform group-hover:translate-x-1">→</span>
+          {t(isNote ? LAB_UI.index.read : item.kind === "explainer" ? LAB_UI.index.try : LAB_UI.index.open, lang)} <span aria-hidden className="inline-block transition-transform group-hover:translate-x-1">→</span>
         </span>
       </span>
     </Link>

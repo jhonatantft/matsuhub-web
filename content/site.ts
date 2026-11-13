@@ -26,10 +26,14 @@ export const SITE = {
   } as L,
 } as const;
 
-/** The homepage sections in the main navigation; hrefs come from lib/i18n/sections. */
-export const NAV: readonly { id: Exclude<SectionKey, "contact">; label: L }[] = [
+/**
+ * The homepage sections that menus link to; hrefs come from lib/i18n/sections. The header shows only
+ * services and process, with the Soluções and Lab dropdowns between them; the footer lists all three.
+ * "Demos" is not here on purpose: each demo is reached from its solution in the Soluções menu.
+ */
+export type NavSection = Exclude<SectionKey, "contact" | "demos">;
+export const NAV: readonly { id: NavSection; label: L }[] = [
   { id: "services", label: { pt: "Serviços", en: "Services" } },
-  { id: "demos", label: { pt: "Demos", en: "Demos" } },
   { id: "agents", label: { pt: "Agentes", en: "Agents" } },
   { id: "process", label: { pt: "Processo", en: "Process" } },
 ];

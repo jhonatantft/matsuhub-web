@@ -1,16 +1,18 @@
 import type { Lang, Localized } from "@/lib/i18n/core";
 
 /**
- * The public Lab (/laboratorio · /en/lab): interactive 3D experiments and technical notes.
+ * The public Lab (/laboratorio · /en/lab): interactive explainers anyone can follow, 3D
+ * experiments and technical notes.
  * Listing data and interface copy only — each item's body lives in its own file next to this
  * one (content/lab/<id>.ts), so the nav, which imports this module, never ships the articles.
  * (The dev-only pages under /lab are something else: app/lab, blocked in robots.txt.)
  */
 type L = Localized<string>;
 
-export const LAB_IDS = ["load-test", "semantic-search", "one-loop", "public-forms"] as const;
+export const LAB_IDS = ["password", "one-click", "next-word", "load-test", "semantic-search", "one-loop", "public-forms"] as const;
 export type LabId = (typeof LAB_IDS)[number];
-export type LabKind = "experiment" | "note";
+/** explainer: computing for everyone, hands-on · experiment: 3D, for builders · note: an article. */
+export type LabKind = "explainer" | "experiment" | "note";
 
 export type LabItem = {
   id: LabId;
@@ -27,6 +29,42 @@ export type LabItem = {
 };
 
 export const LAB_ITEMS: readonly LabItem[] = [
+  {
+    id: "password",
+    kind: "explainer",
+    slug: { pt: "quanto-tempo-para-quebrar-sua-senha", en: "how-long-to-crack-your-password" },
+    title: { pt: "Quanto tempo levam para", en: "How long would it take" },
+    accent: { pt: "quebrar a sua senha?", en: "to crack your password?" },
+    summary: {
+      pt: "Digite uma senha (ela não sai do seu navegador) e veja quantas tentativas um atacante faria, quanto tempo levaria em três situações reais e por que uma frase longa vence um símbolo no final. No fim, gere uma senha forte de graça.",
+      en: "Type a password (it never leaves your browser) and see how many guesses an attacker would need, how long that takes in three real situations and why a long phrase beats a symbol at the end. Then generate a strong one, free.",
+    },
+    tags: ["entropy", "hashing", "bcrypt", "GPU"],
+  },
+  {
+    id: "one-click",
+    kind: "explainer",
+    slug: { pt: "o-que-acontece-num-clique", en: "what-happens-in-a-click" },
+    title: { pt: "O que acontece", en: "What happens" },
+    accent: { pt: "em um clique.", en: "in a single click." },
+    summary: {
+      pt: "Do seu dedo até o servidor e de volta: endereço, conexão, cadeado, resposta. Com os tempos reais que o seu navegador mediu para abrir esta página e a distância máxima até o servidor que te atendeu.",
+      en: "From your finger to the server and back: address, connection, padlock, response. With the real timings your browser measured to open this page and the furthest the server that answered you can be.",
+    },
+    tags: ["DNS", "TCP", "TLS", "HTTP", "CDN"],
+  },
+  {
+    id: "next-word",
+    kind: "explainer",
+    slug: { pt: "como-a-ia-escreve", en: "how-ai-writes" },
+    title: { pt: "Como a IA escreve,", en: "How AI writes," },
+    accent: { pt: "uma palavra por vez.", en: "one word at a time." },
+    summary: {
+      pt: "Um modelo de linguagem minúsculo, treinado aqui no seu navegador, escolhe a próxima palavra sorteando entre as mais prováveis. Mexa na temperatura e veja por que a IA às vezes escreve com confiança algo que não é verdade.",
+      en: "A tiny language model, trained right here in your browser, picks the next word by drawing from the likeliest ones. Turn the temperature up and see why AI sometimes writes, confidently, something that isn't true.",
+    },
+    tags: ["LLM", "tokens", "temperature", "sampling"],
+  },
   {
     id: "load-test",
     kind: "experiment",
@@ -78,6 +116,7 @@ export const LAB_ITEMS: readonly LabItem[] = [
 ];
 
 export const labById = (id: LabId): LabItem => LAB_ITEMS.find((item) => item.id === id)!;
+export const LAB_EXPLAINERS = LAB_ITEMS.filter((item) => item.kind === "explainer");
 export const LAB_EXPERIMENTS = LAB_ITEMS.filter((item) => item.kind === "experiment");
 export const LAB_NOTES = LAB_ITEMS.filter((item) => item.kind === "note");
 export const isLabId = (key: string): key is LabId => (LAB_IDS as readonly string[]).includes(key);
@@ -98,41 +137,50 @@ export const LAB_HREFS: Record<Lang, LabHrefs> = { pt: hrefsFor("pt"), en: hrefs
 export const LAB_UI = {
   name: { pt: "Lab", en: "Lab" },
   nav: {
-    heading: { pt: "Experimentos e notas técnicas", en: "Experiments and technical notes" },
+    heading: { pt: "Para entender e para construir", en: "To understand and to build" },
+    explainers: { pt: "Computação para todos", en: "Computing for everyone" },
     experiments: { pt: "Experimentos 3D", en: "3D experiments" },
     notes: { pt: "Notas técnicas", en: "Technical notes" },
     all: { pt: "Ver o Lab", en: "See the Lab" },
   },
   kind: {
+    explainer: { pt: "Para todos", en: "For everyone" },
     experiment: { pt: "Experimento 3D", en: "3D experiment" },
     note: { pt: "Nota técnica", en: "Technical note" },
   },
   index: {
-    metaTitle: { pt: "Lab — experimentos 3D e notas técnicas · MatsuHub", en: "Lab — 3D experiments and technical notes · MatsuHub" },
+    metaTitle: { pt: "Lab — computação para todos, experimentos 3D e notas técnicas · MatsuHub", en: "Lab — computing for everyone, 3D experiments and technical notes · MatsuHub" },
     metaDescription: {
-      pt: "Experimentos 3D interativos e notas técnicas da MatsuHub: teste de carga, busca semântica com IA, desempenho de animações e proteção de formulários.",
-      en: "Interactive 3D experiments and technical notes by MatsuHub: load testing, AI semantic search, animation performance and form protection.",
+      pt: "Entenda computação mexendo: quanto tempo levam para quebrar a sua senha, o que acontece em um clique e como a IA escreve. Mais experimentos 3D e notas técnicas da MatsuHub.",
+      en: "Learn computing hands-on: how long it takes to crack your password, what happens in a click and how AI writes. Plus 3D experiments and technical notes by MatsuHub.",
     },
     label: { pt: "Lab MatsuHub", en: "MatsuHub Lab" },
     title: { pt: "Experimentos para mexer,", en: "Experiments to play with," },
     accent: { pt: "notas que mostram como.", en: "notes that show how." },
     sub: {
-      pt: "Protótipos 3D que funcionam de verdade e textos técnicos sobre o que a gente constrói. Veja um sistema aguentar (ou não) um pico de acessos, acompanhe uma IA procurando a resposta certa e leia como resolvemos problemas reais de engenharia.",
-      en: "3D prototypes that actually run, and technical write-ups about what we build. Watch a system hold up (or not) under a traffic spike, follow an AI as it looks for the right answer, and read how we solve real engineering problems.",
+      pt: "Perguntas que todo mundo já fez sobre computação, respondidas com algo para mexer. Depois, protótipos 3D que funcionam de verdade e textos técnicos sobre o que a gente constrói.",
+      en: "Questions everyone has asked about computing, answered with something to play with. Then 3D prototypes that actually run, and technical write-ups about what we build.",
     },
-    experimentsLabel: { pt: "01 — Experimentos 3D", en: "01 — 3D experiments" },
+    explainersLabel: { pt: "01 — Computação para todos", en: "01 — Computing for everyone" },
+    explainersTitle: { pt: "Sem jargão, com as mãos.", en: "No jargon, hands on." },
+    explainersLead: {
+      pt: "Não precisa saber programar. Cada página responde uma pergunta do dia a dia, roda no seu navegador e não guarda nada do que você digita.",
+      en: "No coding needed. Each page answers an everyday question, runs in your browser and keeps nothing you type.",
+    },
+    experimentsLabel: { pt: "02 — Experimentos 3D", en: "02 — 3D experiments" },
     experimentsTitle: { pt: "Mexa nos números.", en: "Move the numbers." },
     experimentsLead: {
       pt: "Cada experimento roda um modelo de verdade no seu navegador. Os números mudam com o que você faz, e explicamos de onde vem cada um.",
       en: "Each experiment runs a real model in your browser. The numbers change with what you do, and we explain where each one comes from.",
     },
-    notesLabel: { pt: "02 — Notas técnicas", en: "02 — Technical notes" },
+    notesLabel: { pt: "03 — Notas técnicas", en: "03 — Technical notes" },
     notesTitle: { pt: "Como a gente resolve.", en: "How we solve it." },
     notesLead: {
       pt: "Problemas reais que apareceram construindo este site, e o que fizemos com eles. Com código.",
       en: "Real problems we ran into while building this site, and what we did about them. With code.",
     },
     open: { pt: "Abrir experimento", en: "Open experiment" },
+    try: { pt: "Experimentar", en: "Try it" },
     read: { pt: "Ler nota", en: "Read note" },
     minutes: { pt: "{n} min de leitura", en: "{n} min read" },
   },
@@ -149,7 +197,7 @@ export const LAB_UI = {
   },
   og: {
     index: { pt: "Lab MatsuHub", en: "MatsuHub Lab" },
-    alt: { pt: "Lab MatsuHub — experimentos 3D e notas técnicas", en: "MatsuHub Lab — 3D experiments and technical notes" },
+    alt: { pt: "Lab MatsuHub — computação para todos, experimentos 3D e notas técnicas", en: "MatsuHub Lab — computing for everyone, 3D experiments and technical notes" },
   },
 } as const;
 

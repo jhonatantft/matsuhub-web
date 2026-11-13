@@ -1,3 +1,4 @@
+import { NEXT_WORD, ONE_CLICK, PASSWORD } from "./explainer-bodies";
 import type { LabBlock, LabId } from "./index";
 
 /**
@@ -373,6 +374,9 @@ const ipTag = (ip: string) =>
 ];
 
 export const LAB_BODIES: Record<LabId, readonly LabBlock[]> = {
+  password: PASSWORD,
+  "one-click": ONE_CLICK,
+  "next-word": NEXT_WORD,
   "load-test": LOAD_TEST,
   "semantic-search": SEMANTIC_SEARCH,
   "one-loop": ONE_LOOP,

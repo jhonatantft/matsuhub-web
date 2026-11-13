@@ -73,12 +73,20 @@
   --animate-blink: blink 1.6s ease-in-out infinite;
   --animate-marquee: marquee 32s linear infinite;
   --animate-spin-slow: spin 9s linear infinite;
+  --animate-word-in: word-in 0.45s var(--ease-soft) both;
 
   @keyframes blink {
     50% { opacity: 0.25; }
   }
   @keyframes marquee {
     to { transform: translateX(-50%); }
+  }
+  @keyframes grow {
+    from { transform: scaleX(0.08); }
+    60%, to { transform: scaleX(1); }
+  }
+  @keyframes word-in {
+    from { opacity: 0; filter: blur(6px); }
   }
 }
 
