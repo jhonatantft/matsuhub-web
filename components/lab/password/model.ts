@@ -81,6 +81,8 @@ function dateOptions(digits: string): number {
 
 /** Words in a good attacker dictionary (several languages, names, teams) — order of magnitude. */
 const DICT = 2e5;
+/** Common words people build passphrases from — the list attackers combine. */
+const PHRASE_WORDS = 2e4;
 
 const log10 = Math.log10;
 
@@ -147,12 +149,13 @@ export function analyze(password: string, dictionary: ReadonlySet<string>, commo
       }
     }
 
-    // 5. Several words with separators: a passphrase. Known words cost a dictionary each,
-    //    unknown ones are brute-forced letter by letter.
+    // 5. Several words with separators: a passphrase. Attackers combine common words, so every
+    //    part costs at most a common-word list, whether or not our small list knows it (a real
+    //    dictionary has "grampo"); a short part costs its letters if that is cheaper.
     const parts = lower.split(/[-_. ]+/).filter(Boolean);
     if (parts.length >= 2 && parts.every((p) => /^[a-z]+$/.test(p))) {
-      const g = parts.reduce((sum, p) => sum + (known(p) ? log10(DICT) : p.length * log10(26)), log10(4));
-      if (parts.some(known)) findings.add("phrase");
+      const g = parts.reduce((sum, p) => sum + Math.min(log10(PHRASE_WORDS), p.length * log10(26)), log10(4));
+      findings.add("phrase");
       pattern = Math.min(pattern, g);
     }
 

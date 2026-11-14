@@ -91,8 +91,8 @@ export const PASSWORD_COPY = {
     date: { pt: "Tem um ano ou uma data. São poucos: um século inteiro de datas cabe em 36 mil palpites.", en: "It contains a year or a date. There are few: a whole century of dates fits in 36,000 guesses." },
     sequence: { pt: "É uma sequência de teclado ou de números (123, qwerty, abc).", en: "It's a keyboard or number sequence (123, qwerty, abc)." },
     phrase: {
-      pt: "São palavras separadas: uma frase. O atacante pode combinar palavras do dicionário, mas cada palavra a mais multiplica o trabalho por centenas de milhares.",
-      en: "Separate words: a passphrase. Attackers can combine dictionary words, but every extra word multiplies the work by hundreds of thousands.",
+      pt: "São palavras separadas: uma frase. O atacante combina palavras comuns, então contamos cada uma como um sorteio entre 20 mil, não como letras soltas. Cada palavra a mais multiplica o trabalho por 20 mil.",
+      en: "Separate words: a passphrase. Attackers combine common words, so we count each one as a pick from 20,000, not as loose letters. Every extra word multiplies the work by 20,000.",
     },
     repeat: { pt: "Repetição (aaaa, abcabc) quase não acrescenta nada.", en: "Repetition (aaaa, abcabc) adds almost nothing." },
     short: { pt: "É curta. Cada caractere a mais multiplica o trabalho: o tamanho pesa mais que a variedade.", en: "It's short. Every extra character multiplies the work: length counts more than variety." },
