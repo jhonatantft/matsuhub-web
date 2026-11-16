@@ -1,4 +1,5 @@
 import "@/app/globals.css";
+import Script from "next/script";
 import { Cormorant, Fraunces, JetBrains_Mono, Lexend, Manrope, Sora, Unbounded } from "next/font/google";
 import { Ambient } from "@/components/layout/Ambient";
 import { SmoothScroll } from "@/components/layout/SmoothScroll";
@@ -53,6 +54,9 @@ export function RootDocument({
         <Ambient />
         <SmoothScroll />
         {children}
+        {/* Vercel Web Analytics (cookieless). The script is served by Vercel itself, so it is only
+            added on production builds there; it follows client-side navigations on its own. */}
+        {process.env.VERCEL_ENV === "production" && <Script src="/_vercel/insights/script.js" strategy="afterInteractive" />}
       </body>
     </html>
   );
