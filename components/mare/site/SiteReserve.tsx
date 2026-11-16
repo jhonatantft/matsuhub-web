@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useTurnstile } from "@/components/ui/Turnstile";
-import { elapsedSince, isPhone, LIMITS, RATE_LIMITED_MESSAGE } from "@/components/home/parts-b/leadRules";
+import { elapsedSince, isPhone, LIMITS, RATE_LIMITED_MESSAGE, VERIFY_MESSAGE } from "@/components/home/parts-b/leadRules";
 import { MARE, MARE_TABLES, MARE_ZONES } from "@/content/mare";
 import { cn } from "@/lib/cn";
 import {
@@ -20,7 +20,7 @@ import {
 } from "./bus";
 import { SiteHeading, SiteSection } from "./SiteSection";
 
-type Status = "idle" | "sending" | "sent" | "error" | "limited";
+type Status = "idle" | "sending" | "sent" | "error" | "limited" | "verify";
 type Errors = Partial<Record<"date" | "slot" | "party" | "table" | "name" | "contact" | "message", string>>;
 
 const GROUPS = MARE_ZONES.filter((z) => z.bookable).map((z) => ({
@@ -131,6 +131,11 @@ export function SiteReserve() {
       return;
     }
     setStatus("sending");
+    const turnstileToken = await human.take();
+    if (turnstileToken === null) {
+      setStatus("verify");
+      return;
+    }
     try {
       const res = await fetch("/api/lead", {
         method: "POST",
@@ -143,10 +148,14 @@ export function SiteReserve() {
           message: message.trim(),
           company,
           elapsedMs: elapsedSince(startedAt.current),
-          turnstileToken: await human.take(),
+          turnstileToken,
         }),
       });
-      const body = (await res.json().catch(() => null)) as { ok?: boolean; fields?: string[] } | null;
+      const body = (await res.json().catch(() => null)) as { ok?: boolean; fields?: string[]; error?: string } | null;
+      if (res.status === 403 && body?.error === "challenge_failed") {
+        setStatus("verify");
+        return;
+      }
       if (res.ok && body?.ok) {
         setStatus("sent");
         return;
@@ -386,6 +395,8 @@ export function SiteReserve() {
                 />
               </div>
 
+              {human.slot}
+
               {status === "error" && (
                 <p role="alert" className="rounded-[12px] border border-[#e58a7a]/50 px-4 py-3 text-[13.5px] leading-snug text-[#f3b4a6]">
                   Não conseguimos enviar agora. Seus dados continuam aqui: verifique a conexão e toque em “Tentar novamente”.
@@ -394,6 +405,11 @@ export function SiteReserve() {
               {status === "limited" && (
                 <p role="alert" className="rounded-[12px] border border-[#e58a7a]/50 px-4 py-3 text-[13.5px] leading-snug text-[#f3b4a6]">
                   {RATE_LIMITED_MESSAGE}
+                </p>
+              )}
+              {status === "verify" && (
+                <p role="alert" className="rounded-[12px] border border-[#e58a7a]/50 px-4 py-3 text-[13.5px] leading-snug text-[#f3b4a6]">
+                  {VERIFY_MESSAGE}
                 </p>
               )}
 
@@ -412,7 +428,6 @@ export function SiteReserve() {
                   Usamos seu WhatsApp só para confirmar esta reserva.
                 </p>
               </div>
-              {human.slot}
             </form>
           )}
         </div>

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useTurnstile } from "@/components/ui/Turnstile";
-import { elapsedSince, isEmail, LIMITS, RATE_LIMITED_MESSAGE } from "@/components/home/parts-b/leadRules";
+import { elapsedSince, isEmail, LIMITS, RATE_LIMITED_MESSAGE, VERIFY_MESSAGE } from "@/components/home/parts-b/leadRules";
 import {
   ELO,
   ELO_PRIVACY,
@@ -33,7 +33,7 @@ import { emitSite, onSite, onTour, revealEl, scrollToSection, SECTION, useNow, t
 import { BTN, BTN_GHOST, EloHeading, EloSection } from "./ui";
 
 type Step = 1 | 2 | 3 | 4;
-type Status = "idle" | "sending" | "error" | "limited";
+type Status = "idle" | "sending" | "error" | "limited" | "verify";
 type Pay = "particular" | "convenio" | "";
 type First = "sim" | "nao" | "";
 type Errors = Partial<Record<"name" | "phone" | "email" | "pay" | "first", string>>;
@@ -236,6 +236,11 @@ export function SiteBooking() {
     }
 
     setStatus("sending");
+    const turnstileToken = await human.take();
+    if (turnstileToken === null) {
+      setStatus("verify");
+      return;
+    }
     try {
       const res = await fetch("/api/lead", {
         method: "POST",
@@ -248,14 +253,18 @@ export function SiteBooking() {
           message: "",
           company,
           elapsedMs: elapsedSince(shownAt.current),
-          turnstileToken: await human.take(),
+          turnstileToken,
         }),
       });
       if (res.status === 429) {
         setStatus("limited");
         return;
       }
-      const body = (await res.json().catch(() => null)) as { ok?: boolean; fields?: string[] } | null;
+      const body = (await res.json().catch(() => null)) as { ok?: boolean; fields?: string[]; error?: string } | null;
+      if (res.status === 403 && body?.error === "challenge_failed") {
+        setStatus("verify");
+        return;
+      }
       if (res.ok && body?.ok) {
         const bring = whatToBring(spec, mode, pay, first);
         const stamp = new Date();
@@ -626,6 +635,8 @@ export function SiteBooking() {
                     <input id="elo-company" name="company" tabIndex={-1} autoComplete="off" value={company} onChange={(e) => setCompany(e.target.value)} />
                   </div>
 
+                  {human.slot}
+
                   {status === "error" && (
                     <p role="alert" className="rounded-[14px] border border-[#b3261e]/30 bg-[#b3261e]/[0.05] px-4 py-3 text-[14.5px] leading-snug text-[#8c1d18]">
                       Não conseguimos enviar agora. Seus dados continuam aqui: confira a conexão e toque em “Tentar novamente”.
@@ -634,6 +645,11 @@ export function SiteBooking() {
                   {status === "limited" && (
                     <p role="alert" className="rounded-[14px] border border-[#b3261e]/30 bg-[#b3261e]/[0.05] px-4 py-3 text-[14.5px] leading-snug text-[#8c1d18]">
                       {RATE_LIMITED_MESSAGE}
+                    </p>
+                  )}
+                  {status === "verify" && (
+                    <p role="alert" className="rounded-[14px] border border-[#b3261e]/30 bg-[#b3261e]/[0.05] px-4 py-3 text-[14.5px] leading-snug text-[#8c1d18]">
+                      {VERIFY_MESSAGE}
                     </p>
                   )}
 
@@ -651,7 +667,6 @@ export function SiteBooking() {
                   </p>
                 </div>
               </Step>
-              {human.slot}
             </form>
           )}
         </div>

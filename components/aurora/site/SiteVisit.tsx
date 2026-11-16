@@ -3,13 +3,13 @@
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { useTurnstile } from "@/components/ui/Turnstile";
-import { RATE_LIMITED_MESSAGE, elapsedSince, validateLead, type LeadErrors } from "@/components/home/parts-b/leadRules";
+import { RATE_LIMITED_MESSAGE, VERIFY_MESSAGE, elapsedSince, validateLead, type LeadErrors } from "@/components/home/parts-b/leadRules";
 import { AURORA, AURORA_ROOMS, AURORA_TYPES, AURORA_UNITS } from "@/content/aurora";
 import { cn } from "@/lib/cn";
 import { onSite, SECTION } from "./bus";
 import { SiteHeading, SiteSection } from "./SiteSection";
 
-type Status = "idle" | "sending" | "sent" | "error" | "limited";
+type Status = "idle" | "sending" | "sent" | "error" | "limited" | "verify";
 
 const OPTIONS = AURORA_UNITS.filter((u) => u.status !== "vendida")
   .sort((a, b) => b.floor - a.floor)
@@ -73,6 +73,11 @@ export function SiteVisit() {
     setErrors(found);
     if (Object.keys(found).length > 0) return;
     setStatus("sending");
+    const turnstileToken = await human.take();
+    if (turnstileToken === null) {
+      setStatus("verify");
+      return;
+    }
     try {
       const res = await fetch("/api/lead", {
         method: "POST",
@@ -85,10 +90,14 @@ export function SiteVisit() {
           message: message.trim(),
           company,
           elapsedMs: elapsedSince(startedAt.current),
-          turnstileToken: await human.take(),
+          turnstileToken,
         }),
       });
-      const body = (await res.json().catch(() => null)) as { ok?: boolean; fields?: string[] } | null;
+      const body = (await res.json().catch(() => null)) as { ok?: boolean; fields?: string[]; error?: string } | null;
+      if (res.status === 403 && body?.error === "challenge_failed") {
+        setStatus("verify");
+        return;
+      }
       if (res.ok && body?.ok) {
         setStatus("sent");
         return;
@@ -225,6 +234,8 @@ export function SiteVisit() {
                 />
               </div>
 
+              {human.slot}
+
               {status === "error" && (
                 <p role="alert" className="border border-[#e58a7a]/50 px-4 py-3 text-[13.5px] leading-snug text-[#f0b2a6]">
                   Não conseguimos enviar agora. Seus dados continuam aqui — verifique a conexão e toque em “Tentar novamente”.
@@ -233,6 +244,11 @@ export function SiteVisit() {
               {status === "limited" && (
                 <p role="alert" className="border border-[#e58a7a]/50 px-4 py-3 text-[13.5px] leading-snug text-[#f0b2a6]">
                   {RATE_LIMITED_MESSAGE}
+                </p>
+              )}
+              {status === "verify" && (
+                <p role="alert" className="border border-[#e58a7a]/50 px-4 py-3 text-[13.5px] leading-snug text-[#f0b2a6]">
+                  {VERIFY_MESSAGE}
                 </p>
               )}
 
@@ -251,7 +267,6 @@ export function SiteVisit() {
                   Usamos seu contato só para responder a este pedido.
                 </p>
               </div>
-              {human.slot}
             </form>
           )}
         </div>

@@ -17,7 +17,7 @@ import {
   type LeadFields,
 } from "./leadRules";
 
-type Status = "idle" | "sending" | "success" | "error" | "limited";
+type Status = "idle" | "sending" | "success" | "error" | "limited" | "verify";
 
 const EMPTY: LeadFields = { name: "", contact: "", message: "" };
 
@@ -127,6 +127,11 @@ export function LeadForm({ lang = "pt" }: { lang?: Lang }) {
     }
 
     setStatus("sending");
+    const turnstileToken = await human.take();
+    if (turnstileToken === null) {
+      setStatus("verify");
+      return;
+    }
     try {
       const res = await fetch("/api/lead", {
         method: "POST",
@@ -139,11 +144,15 @@ export function LeadForm({ lang = "pt" }: { lang?: Lang }) {
           message: f.message.trim(),
           company,
           elapsedMs: elapsedSince(startedAt.current),
-          turnstileToken: await human.take(),
+          turnstileToken,
         }),
       });
       if (res.status === 429) {
         setStatus("limited");
+        return;
+      }
+      if (res.status === 403 && (await res.json().catch(() => null))?.error === "challenge_failed") {
+        setStatus("verify");
         return;
       }
       if (res.status === 422) {
@@ -340,6 +349,15 @@ export function LeadForm({ lang = "pt" }: { lang?: Lang }) {
               <path d="M8 4.8v3.6M8 11v.2" strokeLinecap="round" />
             </svg>
             {messages.rateLimited}
+          </p>
+        )}
+        {status === "verify" && (
+          <p className="flex items-start gap-2.5 rounded-[14px] border border-danger/40 bg-danger/10 px-4 py-3 text-[14px] text-ink">
+            <svg viewBox="0 0 16 16" className="mt-[3px] h-4 w-4 shrink-0 text-danger" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden>
+              <circle cx="8" cy="8" r="6.5" />
+              <path d="M8 4.8v3.6M8 11v.2" strokeLinecap="round" />
+            </svg>
+            {messages.verify}
           </p>
         )}
       </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 /**
  * Cloudflare Turnstile, browser side. Renders nothing visible unless Cloudflare wants an
@@ -8,11 +8,15 @@ import { useCallback, useEffect, useRef } from "react";
  * Off (no script, no slot) until NEXT_PUBLIC_TURNSTILE_SITE_KEY exists at build time.
  *
  *   const human = useTurnstile("dark");
- *   body: JSON.stringify({ ..., turnstileToken: await human.take() })
- *   <form>… {human.slot}</form>
+ *   const turnstileToken = await human.take();
+ *   if (turnstileToken === null) return showTickTheBoxMessage();
+ *   body: JSON.stringify({ ..., turnstileToken })
+ *   <form>… {human.slot} (above the submit button)</form>
  *
  * `take()` waits (up to 10 s) for a token, hands it over and resets the widget, since a token
- * works once; the next submit gets a fresh one.
+ * works once; the next submit gets a fresh one. It answers `null` at once, and scrolls the box
+ * into view, when Cloudflare shows the check box and it is not ticked yet: nothing should be sent
+ * then. `undefined` means Turnstile is off or unavailable; send anyway and let the server decide.
  */
 
 type Theme = "dark" | "light" | "auto";
@@ -50,29 +54,45 @@ function loadTurnstile(): Promise<TurnstileApi> {
 }
 
 export function useTurnstile(theme: Theme = "dark") {
-  const el = useRef<HTMLDivElement>(null);
+  // The slot may mount later than the form (a wizard's last step), so render whenever it appears.
+  const [node, setNode] = useState<HTMLDivElement | null>(null);
+  const el = useRef<HTMLDivElement | null>(null);
+  const attach = useCallback((n: HTMLDivElement | null) => {
+    el.current = n;
+    setNode(n);
+  }, []);
   const widget = useRef<string | null>(null);
   const token = useRef<string | null>(null);
-  const waiting = useRef<((t: string | undefined) => void)[]>([]);
+  const interactive = useRef(false);
+  const waiting = useRef<((t: string | null | undefined) => void)[]>([]);
 
-  const settle = (t: string | undefined) => {
+  const settle = (t: string | null | undefined) => {
     for (const resolve of waiting.current.splice(0)) resolve(t);
   };
 
   useEffect(() => {
-    if (!SITE_KEY || !el.current) return;
+    if (!SITE_KEY || !node) return;
     let alive = true;
     loadTurnstile()
       .then((api) => {
-        if (!alive || !el.current) return;
-        widget.current = api.render(el.current, {
+        if (!alive) return;
+        widget.current = api.render(node, {
           sitekey: SITE_KEY,
           theme,
           size: "flexible",
           appearance: "interaction-only",
           callback: (t: string) => {
             token.current = t;
+            interactive.current = false;
             settle(t);
+          },
+          // the check box is showing and waits for a tick: a pending submit must not hang on it
+          "before-interactive-callback": () => {
+            interactive.current = true;
+            settle(null);
+          },
+          "after-interactive-callback": () => {
+            interactive.current = false;
           },
           "expired-callback": () => {
             token.current = null;
@@ -89,22 +109,29 @@ export function useTurnstile(theme: Theme = "dark") {
       if (widget.current) window.turnstile?.remove(widget.current);
       widget.current = null;
       token.current = null;
+      interactive.current = false;
     };
-  }, [theme]);
+  }, [theme, node]);
 
-  const take = useCallback(async (): Promise<string | undefined> => {
+  const take = useCallback(async (): Promise<string | null | undefined> => {
     if (!SITE_KEY) return undefined;
     const t =
       token.current ??
-      (await new Promise<string | undefined>((resolve) => {
-        waiting.current.push(resolve);
-        setTimeout(() => resolve(undefined), 10_000);
-      }));
+      (interactive.current
+        ? null
+        : await new Promise<string | null | undefined>((resolve) => {
+            waiting.current.push(resolve);
+            setTimeout(() => resolve(undefined), 10_000);
+          }));
+    if (t === null) {
+      el.current?.scrollIntoView({ block: "center", behavior: "smooth" });
+      return null;
+    }
     token.current = null;
     if (widget.current) window.turnstile?.reset(widget.current);
     return t;
   }, []);
 
-  const slot = SITE_KEY ? <div ref={el} className="empty:hidden [&:has(iframe)]:mt-1" /> : null;
+  const slot = SITE_KEY ? <div ref={attach} className="empty:hidden [&:has(iframe)]:mt-1" /> : null;
   return { take, slot };
 }

@@ -8,7 +8,7 @@
 import type { Lang, Localized } from "@/lib/i18n/core";
 
 export type LeadErrorCode = "nameMin" | "nameMax" | "contactEmpty" | "contactInvalid" | "messageMax";
-type LeadMessages = Record<LeadErrorCode | "rateLimited" | "failed", string>;
+type LeadMessages = Record<LeadErrorCode | "rateLimited" | "failed" | "verify", string>;
 
 /** Every message the lead forms show, per language. `{n}` = the limit. */
 export const LEAD_MESSAGES: Localized<LeadMessages> = {
@@ -20,6 +20,7 @@ export const LEAD_MESSAGES: Localized<LeadMessages> = {
     messageMax: "A mensagem passou de {n} caracteres.",
     rateLimited: "Muitas tentativas seguidas. Tente de novo em alguns minutos.",
     failed: "Não conseguimos enviar agora. Tente de novo em instantes — ou fale com a gente pelo WhatsApp.",
+    verify: "Falta só confirmar que você é humano: marque a caixa acima e envie de novo.",
   },
   en: {
     nameMin: "Tell us what to call you.",
@@ -29,11 +30,15 @@ export const LEAD_MESSAGES: Localized<LeadMessages> = {
     messageMax: "Your message is over {n} characters.",
     rateLimited: "Too many attempts in a row. Please try again in a few minutes.",
     failed: "We couldn't send it just now. Try again in a moment — or reach us on WhatsApp.",
+    verify: "One last step: tick the box above to confirm you're human, then send again.",
   },
 };
 
 /** Shown by every lead form when /api/lead answers 429 (also sent in the 429 body). */
 export const RATE_LIMITED_MESSAGE = LEAD_MESSAGES.pt.rateLimited;
+
+/** Shown when Cloudflare's check box is waiting for a tick, or /api/lead answers challenge_failed. */
+export const VERIFY_MESSAGE = LEAD_MESSAGES.pt.verify;
 
 /**
  * Milliseconds since `startedAt` (a performance.now() mark, 0 = never started), sent as the
