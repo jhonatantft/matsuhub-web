@@ -1,8 +1,10 @@
+import { after } from "next/server";
 import { z } from "zod";
 import { INTERESTS, LIMITS, RATE_LIMITED_MESSAGE, isValidContact } from "@/components/home/parts-b/leadRules";
 import { clientIp, hashIp, hashText, logTag } from "@/lib/guard/ip";
 import { claimOnce, rateLimit, release, type Rule } from "@/lib/guard/limiter";
 import { checkSameOrigin } from "@/lib/guard/origin";
+import { leadEmailConfigured, sendLeadEmail } from "@/lib/notify/lead-email";
 import { supabaseAdmin, type LeadRow } from "@/lib/supabase/server";
 
 /**
@@ -26,7 +28,9 @@ import { supabaseAdmin, type LeadRow } from "@/lib/supabase/server";
  * Checks, in order (docs/security.md has the why and every limit):
  *   415 content-type · 413 size → 403 cross-site → 429 per-IP limits → 400 JSON → honeypot,
  *   time-to-fill, content heuristics (silent 200) → 422 schema → duplicate (silent 200) →
- *   Supabase: durable per-IP limit (429) and duplicate (silent 200) → insert.
+ *   Supabase: durable per-IP limit (429) and duplicate (silent 200) → insert → e-mail (after the
+ *   response). Without Supabase, the e-mail (lib/notify/lead-email.ts) is the record: sent before
+ *   answering, 500 if it fails. Neither configured: 503 in production.
  * "Silent 200" answers { ok: true } exactly like a stored lead minus `stored`, so bots learn nothing.
  */
 
@@ -197,6 +201,28 @@ async function durableCheck(
   return retryAfter > 0 ? { kind: "limited", retryAfter } : { kind: "ok" };
 }
 
+/** Inserts the lead; false when the database refused, failed or took too long. */
+async function insertLead(
+  db: NonNullable<ReturnType<typeof supabaseAdmin>>,
+  row: LeadRow & { ip_hash: string | null },
+): Promise<boolean> {
+  try {
+    let { error } = await db.from("leads").insert(row).abortSignal(AbortSignal.timeout(4000));
+    if (error && (error.code === "PGRST204" || error.message.includes("ip_hash"))) {
+      // migration 0002 not applied yet: keep accepting leads, without the IP hash
+      console.warn("[api/lead] coluna ip_hash ausente — rode supabase/migrations/0002_leads_guard.sql");
+      const { ip_hash: _omit, ...legacy } = row;
+      void _omit;
+      ({ error } = await db.from("leads").insert(legacy).abortSignal(AbortSignal.timeout(4000)));
+    }
+    if (error) console.error("[api/lead] insert failed:", error.code, error.message.slice(0, 200));
+    return !error;
+  } catch (err) {
+    console.error("[api/lead] insert threw:", err instanceof Error ? err.name : "error");
+    return false;
+  }
+}
+
 export async function POST(req: Request) {
   // Compare the media type essence only: "text/plain; x=application/json" is a CORS-simple
   // type, so a substring match would let any site post here without a preflight.
@@ -281,6 +307,12 @@ export async function POST(req: Request) {
 
   const db = supabaseAdmin();
   if (!db) {
+    // No database: the e-mail is the only record of the lead, so it must go out before we answer.
+    if (leadEmailConfigured()) {
+      if (await sendLeadEmail(row)) return json({ ok: true, stored: false });
+      await release(dupKey);
+      return json({ ok: false, error: "storage_failed" }, 500);
+    }
     if (process.env.NODE_ENV !== "production") {
       console.info("[api/lead] Supabase não configurado — lead não armazenado:", row);
       return json({ ok: true, stored: false });
@@ -300,25 +332,14 @@ export async function POST(req: Request) {
     }
   }
 
-  try {
-    let { error } = await db.from("leads").insert(row);
-    if (error && (error.code === "PGRST204" || error.message.includes("ip_hash"))) {
-      // migration 0002 not applied yet: keep accepting leads, without the IP hash
-      console.warn("[api/lead] coluna ip_hash ausente — rode supabase/migrations/0002_leads_guard.sql");
-      const { ip_hash: _omit, ...legacy } = row;
-      void _omit;
-      ({ error } = await db.from("leads").insert(legacy));
-    }
-    if (error) {
-      await release(dupKey);
-      console.error("[api/lead] insert failed:", error.code, error.message.slice(0, 200));
-      return json({ ok: false, error: "storage_failed" }, 500);
-    }
-  } catch (err) {
+  if (!(await insertLead(db, row))) {
+    // Database down or paused (free projects pause after a week idle): the e-mail keeps the lead.
+    if (leadEmailConfigured() && (await sendLeadEmail(row))) return json({ ok: true, stored: false });
     await release(dupKey);
-    console.error("[api/lead] insert threw:", err instanceof Error ? err.name : "error");
     return json({ ok: false, error: "storage_failed" }, 500);
   }
 
+  // Stored: the e-mail is only a heads-up, so it goes out after the response.
+  after(() => sendLeadEmail(row));
   return json({ ok: true, stored: true });
 }

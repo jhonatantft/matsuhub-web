@@ -18,6 +18,16 @@ The contact form (`/#contato`) and the demo pages POST to `/api/lead`, which sto
 
 Without these variables the endpoint logs the lead to the server console in development (`{ ok: true, stored: false }`) and answers `503 not_configured` in production.
 
+## New-lead e-mail (Resend)
+
+Each stored lead also sends an e-mail, after the response, so you hear about it right away:
+
+1. Create an account at [resend.com](https://resend.com) and an API key (**API Keys → Create**, permission "Sending access").
+2. On Vercel add `RESEND_API_KEY` and `LEAD_NOTIFY_TO` (the e-mail of your Resend account), then redeploy.
+3. Optional: verify `matsuhub.com` in Resend (**Domains**, a few DNS records) and set `LEAD_NOTIFY_FROM=MatsuHub <leads@matsuhub.com>`; only then can `LEAD_NOTIFY_TO` be any address.
+
+The e-mail has the name, contact (a WhatsApp link for phone numbers), interest, page and message; "Reply" answers the lead when the contact is an e-mail. If Supabase is not configured, the e-mail alone is the record: it is sent before answering and the form shows an error if it fails.
+
 ## Test
 
 ```bash

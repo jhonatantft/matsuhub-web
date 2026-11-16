@@ -48,3 +48,6 @@ next-env.d.ts
 /sales/
 /docs/unused-media/
 /brand/
+
+# Supabase CLI link state
+supabase/.temp/
