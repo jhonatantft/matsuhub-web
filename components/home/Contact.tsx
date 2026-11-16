@@ -1,4 +1,3 @@
-import { Button } from "@/components/ui/Button";
 import { Label } from "@/components/ui/Label";
 import { Reveal } from "@/components/ui/Reveal";
 import { HOME } from "@/content/site";
@@ -99,20 +98,6 @@ export function Contact({ lang = "pt" }: { lang?: Lang }) {
                 </li>
               ))}
             </ol>
-
-            <div className="mt-10 border-t border-line pt-8">
-              <p className="text-[14.5px] text-mute">{t(copy.direct, lang)}</p>
-              <div className="mt-4 flex flex-wrap gap-3">
-                {/* TODO: real WhatsApp link (https://wa.me/55DDDNUMERO) — the owner has not provided it yet. */}
-                <Button href="#" variant="ghost" arrow="↗">
-                  {t(copy.whatsapp, lang)}
-                </Button>
-                {/* TODO: real address (mailto:contato@…) — the owner has not provided it yet. */}
-                <Button href="#" variant="ghost" arrow="↗">
-                  {t(copy.email, lang)}
-                </Button>
-              </div>
-            </div>
           </Reveal>
         </div>
       </div>

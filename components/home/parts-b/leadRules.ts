@@ -19,7 +19,7 @@ export const LEAD_MESSAGES: Localized<LeadMessages> = {
     contactInvalid: "Informe um e-mail válido ou um WhatsApp com DDD.",
     messageMax: "A mensagem passou de {n} caracteres.",
     rateLimited: "Muitas tentativas seguidas. Tente de novo em alguns minutos.",
-    failed: "Não conseguimos enviar agora. Tente de novo em instantes — ou fale com a gente pelo WhatsApp.",
+    failed: "Não conseguimos enviar agora. Seus dados continuam aqui: tente de novo em instantes.",
     verify: "Falta só confirmar que você é humano: marque a caixa acima e envie de novo.",
   },
   en: {
@@ -29,7 +29,7 @@ export const LEAD_MESSAGES: Localized<LeadMessages> = {
     contactInvalid: "Enter a valid email or a full WhatsApp number, with country code.",
     messageMax: "Your message is over {n} characters.",
     rateLimited: "Too many attempts in a row. Please try again in a few minutes.",
-    failed: "We couldn't send it just now. Try again in a moment — or reach us on WhatsApp.",
+    failed: "We couldn't send it just now. Your details are still here: try again in a moment.",
     verify: "One last step: tick the box above to confirm you're human, then send again.",
   },
 };

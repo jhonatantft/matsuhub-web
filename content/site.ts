@@ -424,8 +424,5 @@ export const HOME = {
         },
       },
     ] as readonly { n: string; t: L; d: L }[],
-    direct: { pt: "Prefere conversar direto?", en: "Prefer to talk directly?" } as L,
-    whatsapp: { pt: "Falar no WhatsApp", en: "Message us on WhatsApp" } as L,
-    email: { pt: "Enviar e-mail", en: "Send an email" } as L,
   },
 } as const;
