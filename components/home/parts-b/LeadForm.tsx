@@ -321,6 +321,8 @@ export function LeadForm({ lang = "pt" }: { lang?: Lang }) {
         />
       </div>
 
+      {human.slot}
+
       <div role="alert" aria-live="assertive" className="empty:hidden">
         {status === "error" && (
           <p className="flex items-start gap-2.5 rounded-[14px] border border-danger/40 bg-danger/10 px-4 py-3 text-[14px] text-ink">
@@ -353,7 +355,6 @@ export function LeadForm({ lang = "pt" }: { lang?: Lang }) {
           {sending ? d.sending : d.send}
         </Button>
       </div>
-      {human.slot}
     </form>
   );
 }
