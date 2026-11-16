@@ -4,6 +4,7 @@ import { cn } from "@/lib/cn";
 import { dict, type Dictionary, type Lang } from "@/lib/i18n";
 import type { TimedStep, Tool } from "./agentScenarios";
 import { ToolIcon } from "./icons";
+import { LogoMark } from "@/components/ui/Logo";
 
 export type GraphState = {
   /** Tool the current step talks to. */
@@ -153,10 +154,7 @@ export function AgentGraph({ tools, state, steps, elapsed, boxRef, pulseRef, pat
               )}
             />
             <span className="relative flex flex-col items-center">
-              <svg viewBox="0 0 24 24" className="h-6 w-6 sm:h-8 sm:w-8" fill="none" aria-hidden>
-                <path d="M12 3 3 20h18L12 3Zm0 11-9 6m9-6 9 6m-9-6V3" stroke="var(--color-acc)" strokeWidth="1.4" />
-                <circle cx="12" cy="14" r="2.2" fill="var(--color-acc)" />
-              </svg>
+              <LogoMark className="h-7 w-7 sm:h-9 sm:w-9" />
               <span className="mt-1 font-mono text-[9px] tracking-[0.18em] text-acc uppercase sm:text-[10px]">
                 {state.thinking ? d.core.thinking : state.finished ? d.core.done : d.core.idle}
               </span>

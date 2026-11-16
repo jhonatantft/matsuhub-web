@@ -1,4 +1,5 @@
 import { ImageResponse } from "next/og";
+import { MarkSvg } from "@/components/ui/logo-mark";
 
 export const OG_SIZE = { width: 1200, height: 630 };
 
@@ -25,10 +26,7 @@ export function segmentOgImage({ kicker, title, accent, chips }: { kicker: strin
       >
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 16, fontSize: 34, fontWeight: 700 }}>
-            <svg width="46" height="46" viewBox="0 0 24 24" fill="none">
-              <path d="M12 3 3 20h18L12 3Zm0 11-9 6m9-6 9 6m-9-6V3" stroke="#b9ff4b" strokeWidth="1.5" />
-              <circle cx="12" cy="14" r="2.2" fill="#b9ff4b" />
-            </svg>
+            <MarkSvg size={52} gradientId="og-core" armColor="#eef4ee" />
             <div style={{ display: "flex" }}>
               matsu<span style={{ color: "#b9ff4b" }}>hub</span>
             </div>

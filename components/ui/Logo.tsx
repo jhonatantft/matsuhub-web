@@ -1,16 +1,20 @@
+import { useId } from "react";
 import { cn } from "@/lib/cn";
+import { MarkSvg } from "@/components/ui/logo-mark";
 
-/** MatsuHub mark (placeholder): a hub node inside a pine-shaped triangle, plus the wordmark. */
+/** The mark alone: light arms, gradient core. Sized by the caller (default 26px). */
+export function LogoMark({ className, size = 26 }: { className?: string; size?: number }) {
+  return <MarkSvg size={size} gradientId={`mh-core-${useId()}`} className={cn("text-ink", className)} />;
+}
+
+/** MatsuHub logo: the Pinwheel mark plus the wordmark, "hub" in the lime-to-mint gradient. */
 export function Logo({ className, wordmark = true }: { className?: string; wordmark?: boolean }) {
   return (
     <span className={cn("inline-flex items-center gap-2.5 font-display text-[15px] font-semibold", className)}>
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden>
-        <path d="M12 3 3 20h18L12 3Zm0 11-9 6m9-6 9 6m-9-6V3" stroke="var(--color-acc)" strokeWidth="1.5" />
-        <circle cx="12" cy="14" r="2.2" fill="var(--color-acc)" />
-      </svg>
+      <LogoMark />
       {wordmark && (
         <span>
-          matsu<span className="text-acc">hub</span>
+          matsu<span className="bg-linear-to-r from-acc to-acc-2 bg-clip-text text-transparent">hub</span>
         </span>
       )}
     </span>

@@ -1,5 +1,6 @@
 import { ImageResponse } from "next/og";
 import type { Lang } from "@/lib/i18n/core";
+import { MarkSvg } from "@/components/ui/logo-mark";
 
 export const HOME_OG_SIZE = { width: 1200, height: 630 };
 
@@ -29,10 +30,7 @@ export function homeOgImage(lang: Lang) {
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 16, fontSize: 36, fontWeight: 700 }}>
-          <svg width="50" height="50" viewBox="0 0 24 24" fill="none">
-            <path d="M12 3 3 20h18L12 3Zm0 11-9 6m9-6 9 6m-9-6V3" stroke="#b9ff4b" strokeWidth="1.5" />
-            <circle cx="12" cy="14" r="2.2" fill="#b9ff4b" />
-          </svg>
+          <MarkSvg size={56} gradientId="og-core" armColor="#eef4ee" />
           <div style={{ display: "flex" }}>
             matsu<span style={{ color: "#b9ff4b" }}>hub</span>
           </div>
