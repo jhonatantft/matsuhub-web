@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
+import { useTurnstile } from "@/components/ui/Turnstile";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/cn";
 import { dict, fill, type Lang } from "@/lib/i18n";
@@ -73,6 +74,7 @@ export function LeadForm({ lang = "pt" }: { lang?: Lang }) {
   const [f, setF] = useState<LeadFields>(EMPTY);
   const [interests, setInterests] = useState<string[]>([]);
   const [company, setCompany] = useState("");
+  const human = useTurnstile("dark");
   const [errors, setErrors] = useState<LeadErrors>({});
   const [tried, setTried] = useState(false);
   const [status, setStatus] = useState<Status>("idle");
@@ -137,6 +139,7 @@ export function LeadForm({ lang = "pt" }: { lang?: Lang }) {
           message: f.message.trim(),
           company,
           elapsedMs: elapsedSince(startedAt.current),
+          turnstileToken: await human.take(),
         }),
       });
       if (res.status === 429) {
@@ -350,6 +353,7 @@ export function LeadForm({ lang = "pt" }: { lang?: Lang }) {
           {sending ? d.sending : d.send}
         </Button>
       </div>
+      {human.slot}
     </form>
   );
 }

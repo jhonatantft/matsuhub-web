@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useTurnstile } from "@/components/ui/Turnstile";
 import { elapsedSince, isPhone, LIMITS, RATE_LIMITED_MESSAGE } from "@/components/home/parts-b/leadRules";
 import { MARE, MARE_TABLES, MARE_ZONES } from "@/content/mare";
 import { cn } from "@/lib/cn";
@@ -49,6 +50,7 @@ export function SiteReserve() {
   const [contact, setContact] = useState("");
   const [message, setMessage] = useState("");
   const [company, setCompany] = useState("");
+  const human = useTurnstile("auto");
   const [errors, setErrors] = useState<Errors>({});
   const [status, setStatus] = useState<Status>("idle");
 
@@ -141,6 +143,7 @@ export function SiteReserve() {
           message: message.trim(),
           company,
           elapsedMs: elapsedSince(startedAt.current),
+          turnstileToken: await human.take(),
         }),
       });
       const body = (await res.json().catch(() => null)) as { ok?: boolean; fields?: string[] } | null;
@@ -409,6 +412,7 @@ export function SiteReserve() {
                   Usamos seu WhatsApp só para confirmar esta reserva.
                 </p>
               </div>
+              {human.slot}
             </form>
           )}
         </div>

@@ -4,6 +4,7 @@ import { INTERESTS, LIMITS, RATE_LIMITED_MESSAGE, isValidContact } from "@/compo
 import { clientIp, hashIp, hashText, logTag } from "@/lib/guard/ip";
 import { claimOnce, rateLimit, release, type Rule } from "@/lib/guard/limiter";
 import { checkSameOrigin } from "@/lib/guard/origin";
+import { turnstileEnabled, verifyTurnstile } from "@/lib/guard/turnstile";
 import { leadEmailConfigured, sendLeadEmail } from "@/lib/notify/lead-email";
 import { supabaseAdmin, type LeadRow } from "@/lib/supabase/server";
 
@@ -27,7 +28,8 @@ import { supabaseAdmin, type LeadRow } from "@/lib/supabase/server";
  *
  * Checks, in order (docs/security.md has the why and every limit):
  *   415 content-type · 413 size → 403 cross-site → 429 per-IP limits → 400 JSON → honeypot,
- *   time-to-fill, content heuristics (silent 200) → 422 schema → duplicate (silent 200) →
+ *   time-to-fill, content heuristics (silent 200) → 422 schema → 403 Turnstile (when
+ *   TURNSTILE_SECRET_KEY is set; body field `turnstileToken`) → duplicate (silent 200) →
  *   Supabase: durable per-IP limit (429) and duplicate (silent 200) → insert → e-mail (after the
  *   response). Without Supabase, the e-mail (lib/notify/lead-email.ts) is the record: sent before
  *   answering, 500 if it fails. Neither configured: 503 in production.
@@ -288,6 +290,16 @@ export async function POST(req: Request) {
 
   const spam = spamReason(lead.name, message);
   if (spam) return drop(`conteúdo (${spam})`, tag, { source });
+
+  // Cloudflare Turnstile (when configured): the browser passed the challenge. Checked after the
+  // cheap filters so junk never costs a verification call.
+  if (turnstileEnabled()) {
+    const human = await verifyTurnstile((raw as { turnstileToken?: unknown }).turnstileToken, ip);
+    if (!human.ok) {
+      note("bloqueado: turnstile", tag, { source, why: human.reason });
+      return json({ ok: false, error: "challenge_failed" }, 403);
+    }
+  }
 
   // Duplicate: same contact + same message within 10 minutes, from anywhere.
   const dupKey = `lead:${hashText(`${lead.contact.toLowerCase()}\n${message.replace(/\s+/g, " ")}`)}`;

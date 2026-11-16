@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useTurnstile } from "@/components/ui/Turnstile";
 import { elapsedSince, isEmail, LIMITS, RATE_LIMITED_MESSAGE } from "@/components/home/parts-b/leadRules";
 import {
   ELO,
@@ -67,6 +68,7 @@ export function SiteBooking() {
   const [pay, setPay] = useState<Pay>("");
   const [first, setFirst] = useState<First>("");
   const [company, setCompany] = useState("");
+  const human = useTurnstile("auto");
   const [errors, setErrors] = useState<Errors>({});
   const [status, setStatus] = useState<Status>("idle");
   const [done, setDone] = useState<Done | null>(null);
@@ -246,6 +248,7 @@ export function SiteBooking() {
           message: "",
           company,
           elapsedMs: elapsedSince(shownAt.current),
+          turnstileToken: await human.take(),
         }),
       });
       if (res.status === 429) {
@@ -648,6 +651,7 @@ export function SiteBooking() {
                   </p>
                 </div>
               </Step>
+              {human.slot}
             </form>
           )}
         </div>

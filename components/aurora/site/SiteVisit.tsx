@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
+import { useTurnstile } from "@/components/ui/Turnstile";
 import { RATE_LIMITED_MESSAGE, elapsedSince, validateLead, type LeadErrors } from "@/components/home/parts-b/leadRules";
 import { AURORA, AURORA_ROOMS, AURORA_TYPES, AURORA_UNITS } from "@/content/aurora";
 import { cn } from "@/lib/cn";
@@ -27,6 +28,7 @@ export function SiteVisit() {
   const [interest, setInterest] = useState("");
   const [message, setMessage] = useState("");
   const [company, setCompany] = useState("");
+  const human = useTurnstile("auto");
   const [errors, setErrors] = useState<LeadErrors>({});
   const [status, setStatus] = useState<Status>("idle");
   const formRef = useRef<HTMLFormElement>(null);
@@ -83,6 +85,7 @@ export function SiteVisit() {
           message: message.trim(),
           company,
           elapsedMs: elapsedSince(startedAt.current),
+          turnstileToken: await human.take(),
         }),
       });
       const body = (await res.json().catch(() => null)) as { ok?: boolean; fields?: string[] } | null;
@@ -248,6 +251,7 @@ export function SiteVisit() {
                   Usamos seu contato só para responder a este pedido.
                 </p>
               </div>
+              {human.slot}
             </form>
           )}
         </div>
