@@ -1,0 +1,668 @@
+{
+ "description": [
+  "The internet in slow motion: what happens when you type a URL and press Enter. On a fast connection, a web page can appear in under half a second. This video stretches that half second across ten minutes and follows one request the whole way: the key press, DNS, the TCP handshake, HTTPS/TLS encryption, Wi-Fi, fiber optics and routers, CDNs, the server, and how the browser renders the page.\nIt's also a visual walkthrough of the classic interview question \"what happens when you type a URL and press Enter?\", using wikipedia.org and a clock taken from one real, measured page load.",
+  "The clock on screen follows that load of wikipedia.org on a fast home connection (November 2026), rounded. It starts when the browser receives the key press. It is a good case, not a typical one: plenty of pages take a second or more."
+ ],
+ "chapters": [
+  {
+   "t": "00:00",
+   "s": 0,
+   "title": "What happens when you type a URL and press Enter"
+  },
+  {
+   "t": "00:40",
+   "s": 40,
+   "title": "How a keyboard sends Enter (0x28)"
+  },
+  {
+   "t": "01:07",
+   "s": 67,
+   "title": "URL or search? The browser adds HTTPS"
+  },
+  {
+   "t": "01:39",
+   "s": 99,
+   "title": "How DNS works: finding the IP address"
+  },
+  {
+   "t": "03:17",
+   "s": 197,
+   "title": "The TCP three-way handshake"
+  },
+  {
+   "t": "04:11",
+   "s": 251,
+   "title": "How HTTPS works: a secret agreed in public (TLS)"
+  },
+  {
+   "t": "05:45",
+   "s": 345,
+   "title": "The request travels: Wi-Fi, fiber optics, routers, CDNs"
+  },
+  {
+   "t": "07:03",
+   "s": 423,
+   "title": "Inside the server: load balancer, 200 OK and 404"
+  },
+  {
+   "t": "07:45",
+   "s": 465,
+   "title": "Packets come back, and the browser renders the page"
+  },
+  {
+   "t": "09:02",
+   "s": 542,
+   "title": "The whole page load at real speed"
+  }
+ ],
+ "howMade": [
+  "Visuals: animation rendered in code (React and Remotion). No filmed or stock footage.",
+  "Narration: an AI voice. Music: AI-generated (Suno). Sound effects: synthesized in code.",
+  "Every figure is checked against the sources below. Where a number could not be confirmed, the script stays loose on purpose.",
+  "Found a mistake? Leave a comment and it will be checked against a source."
+ ],
+ "next": "Why the light does not leak out of the glass fiber.",
+ "sources": [
+  {
+   "topic": "The key",
+   "items": [
+    {
+     "label": "Enter is sent as the number 0x28",
+     "url": "https://cgit.freebsd.org/src/plain/share/misc/usb_hid_usages"
+    },
+    {
+     "label": "The computer polls a USB keyboard",
+     "url": "https://en.wikipedia.org/wiki/USB_human_interface_device_class"
+    },
+    {
+     "label": "Blink length, 100 to 400 ms",
+     "url": "https://en.wikipedia.org/wiki/Blinking"
+    }
+   ]
+  },
+  {
+   "topic": "Finding the address",
+   "items": [
+    {
+     "label": "Browser name cache",
+     "url": "https://raw.githubusercontent.com/chromium/chromium/main/net/dns/README.md"
+    },
+    {
+     "label": "Operating system name cache",
+     "url": "https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/ipconfig"
+    },
+    {
+     "label": "Who runs your resolver",
+     "url": "https://developers.google.com/speed/public-dns/docs/using"
+    },
+    {
+     "label": "Root, then .org, then the site",
+     "url": "https://www.rfc-editor.org/rfc/rfc1034"
+    },
+    {
+     "label": "How slow the full chase is",
+     "url": "https://developers.google.com/speed/public-dns/docs/performance"
+    },
+    {
+     "label": "\"This site can't be reached\"",
+     "url": "https://raw.githubusercontent.com/chromium/chromium/main/components/error_page_strings.grdp"
+    }
+   ]
+  },
+  {
+   "topic": "Handshake and encryption",
+   "items": [
+    {
+     "label": "TCP, three messages and numbered data",
+     "url": "https://www.rfc-editor.org/rfc/rfc9293"
+    },
+    {
+     "label": "TLS 1.3, key exchange then certificate",
+     "url": "https://www.rfc-editor.org/rfc/rfc8446"
+    },
+    {
+     "label": "The paint analogy",
+     "url": "https://en.wikipedia.org/wiki/Diffie%E2%80%93Hellman_key_exchange"
+    },
+    {
+     "label": "\"Your connection is not private\"",
+     "url": "https://raw.githubusercontent.com/chromium/chromium/main/components/security_interstitials_strings.grdp"
+    }
+   ]
+  },
+  {
+   "topic": "The trip",
+   "items": [
+    {
+     "label": "Light in fiber, about 200,000 km/s",
+     "url": "https://www.commscope.com/globalassets/digizuite/2799-latency-in-optical-fiber-systems-wp-111432-en.pdf?r=1"
+    },
+    {
+     "label": "Router hops, median 13",
+     "url": "https://www.caida.org/projects/ark/statistics/bdl-us/resp_path_length_ccdf.html"
+    },
+    {
+     "label": "Undersea cables",
+     "url": "https://www2.telegeography.com/submarine-cable-faqs-frequently-asked-questions"
+    },
+    {
+     "label": "Copies in hundreds of cities",
+     "url": "https://www.cloudflare.com/network/"
+    },
+    {
+     "label": "Wikipedia's own caching sites",
+     "url": "https://wikitech.wikimedia.org/wiki/Data_centers"
+    },
+    {
+     "label": "Why light stays in the glass",
+     "url": "https://en.wikipedia.org/wiki/Optical_fiber"
+    }
+   ]
+  },
+  {
+   "topic": "The reply and the page",
+   "items": [
+    {
+     "label": "Packet size, 1,500 bytes",
+     "url": "https://www.rfc-editor.org/rfc/rfc894"
+    },
+    {
+     "label": "Requests per page (the median page needs about 75; this one needed only 5)",
+     "url": "https://almanac.httparchive.org/en/2025/page-weight"
+    },
+    {
+     "label": "Structure, style, layout, paint",
+     "url": "https://developer.mozilla.org/en-US/docs/Web/Performance/Guides/How_browsers_work"
+    },
+    {
+     "label": "How many pages are slower",
+     "url": "https://almanac.httparchive.org/en/2025/performance"
+    },
+    {
+     "label": "Searches per day",
+     "url": "https://searchengineland.com/google-5-trillion-searches-per-year-452928"
+    }
+   ]
+  }
+ ],
+ "sourcesNote": "The clock values were measured with curl, dig, traceroute, repeated name lookups and one cold browser load: one machine, one evening. They are an example, not an average.",
+ "factCheckTitle": "Fact check (16 November 2026, two passes)",
+ "research": [
+  {
+   "title": "Confirmed against a primary or standard source",
+   "blocks": [
+    {
+     "type": "table",
+     "head": [
+      "Claim in the script",
+      "Result",
+      "Source"
+     ],
+     "rows": [
+      [
+       "Blink length",
+       "100–400 ms; the average is 100–150 ms. A load of just under half a second is a slow blink, which is what the script now says",
+       "[Wikipedia: Blinking](https://en.wikipedia.org/wiki/Blinking), citing Harvard BioNumbers 100706 and UCL"
+      ],
+      [
+       "Enter is sent as a number",
+       "Usage `0x28`, \"Keyboard Return (ENTER)\"",
+       "[USB HID usage table (FreeBSD copy)](https://cgit.freebsd.org/src/plain/share/misc/usb_hid_usages)"
+      ],
+      [
+       "The computer keeps asking a USB keyboard for news",
+       "\"The host periodically polls the device's interrupt IN endpoint\"",
+       "[Wikipedia: USB HID class](https://en.wikipedia.org/wiki/USB_human_interface_device_class)"
+      ],
+      [
+       "The browser checks its own memory first",
+       "Chrome consults its in-memory host cache, then a resolver",
+       "[Chromium: net/dns README](https://raw.githubusercontent.com/chromium/chromium/main/net/dns/README.md)"
+      ],
+      [
+       "The operating system keeps its own memory of names",
+       "The Windows DNS client cache is checked before any server is asked",
+       "[Microsoft Learn: ipconfig](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/ipconfig)"
+      ],
+      [
+       "The resolver is usually the internet provider's",
+       "\"In most cases\" the network hands out the provider's servers",
+       "[Google Public DNS: get started](https://developers.google.com/speed/public-dns/docs/using)"
+      ],
+      [
+       "The chase goes root → `.org` → the site's own server",
+       "Confirmed: the resolver follows referrals down from the root",
+       "[RFC 1034](https://www.rfc-editor.org/rfc/rfc1034)"
+      ],
+      [
+       "The full chase is the slow path",
+       "Cache misses average 130 ms when servers respond, 300–400 ms end to end",
+       "[Google Public DNS: performance](https://developers.google.com/speed/public-dns/docs/performance)"
+      ],
+      [
+       "\"This site can't be reached\"",
+       "Exact Chrome heading, with \"[host]'s server IP address could not be found\" for a failed lookup",
+       "[Chromium: error_page_strings.grdp](https://raw.githubusercontent.com/chromium/chromium/main/components/error_page_strings.grdp)"
+      ],
+      [
+       "\"Your connection is not private\"",
+       "Exact Chrome heading for a certificate failure",
+       "[Chromium: security_interstitials_strings.grdp](https://raw.githubusercontent.com/chromium/chromium/main/components/security_interstitials_strings.grdp)"
+      ],
+      [
+       "Three handshake messages; data is numbered so loss is noticed and re-sent",
+       "Confirmed",
+       "[RFC 9293](https://www.rfc-editor.org/rfc/rfc9293)"
+      ],
+      [
+       "Key exchange in public, then a certificate check",
+       "Confirmed: Diffie–Hellman exchange, then Certificate and CertificateVerify, in one round trip",
+       "[RFC 8446](https://www.rfc-editor.org/rfc/rfc8446)"
+      ],
+      [
+       "The paint-mixing analogy",
+       "Standard illustration, with yellow as the shared colour",
+       "[Wikipedia: Diffie–Hellman key exchange](https://en.wikipedia.org/wiki/Diffie%E2%80%93Hellman_key_exchange)"
+      ],
+      [
+       "Light in fibre moves at about 200,000 km/s",
+       "About 204,000 km/s for standard fibre",
+       "[CommScope: latency in optical fibre systems](https://www.commscope.com/globalassets/digizuite/2799-latency-in-optical-fiber-systems-wp-111432-en.pdf?r=1)"
+      ],
+      [
+       "Light stays in the fibre when it \"should\" leak (the tease)",
+       "Total internal reflection",
+       "[Wikipedia: Optical fiber](https://en.wikipedia.org/wiki/Optical_fiber)"
+      ],
+      [
+       "\"Often a dozen or more\" routers",
+       "Median path of 13 hops, with a tenth of paths at 8 or fewer, from one long-running monitor",
+       "[CAIDA Ark path length statistics](https://www.caida.org/projects/ark/statistics/bdl-us/resp_path_length_ccdf.html)"
+      ],
+      [
+       "Undersea cables carry nearly all intercontinental data",
+       "Satellites carry \"a very small percentage\"; 0.37% of United States international capacity",
+       "[TeleGeography submarine cable FAQ](https://www2.telegeography.com/submarine-cable-faqs-frequently-asked-questions)"
+      ],
+      [
+       "Big sites keep copies in hundreds of cities",
+       "One network alone lists 348 cities, within 50 ms of 95% of internet users",
+       "[Cloudflare network](https://www.cloudflare.com/network/)"
+      ],
+      [
+       "Wikipedia has caching sites of its own",
+       "Amsterdam, San Francisco, Singapore, Marseille and São Paulo, plus two core sites",
+       "[Wikimedia data centers](https://wikitech.wikimedia.org/wiki/Data_centers)"
+      ],
+      [
+       "A packet holds about 1,500 bytes",
+       "Confirmed",
+       "[RFC 894](https://www.rfc-editor.org/rfc/rfc894)"
+      ],
+      [
+       "A page often needs dozens more files",
+       "Median page: 77 requests on desktop, 72 on mobile. Wikipedia's own front page needed only 5 when measured, so the line now says \"often\"",
+       "[Web Almanac 2025, Page Weight](https://almanac.httparchive.org/en/2025/page-weight)"
+      ],
+      [
+       "Structure → style → layout → paint",
+       "Confirmed",
+       "[MDN: How browsers work](https://developer.mozilla.org/en-US/docs/Web/Performance/Guides/How_browsers_work)"
+      ],
+      [
+       "\"Plenty of pages take longer, a second or more\"",
+       "30% of desktop sites and 45% of mobile sites miss the 1.8 s first-paint threshold",
+       "[Web Almanac 2025, Performance](https://almanac.httparchive.org/en/2025/performance)"
+      ],
+      [
+       "\"Billions of times a day\"",
+       "Google alone reports more than 5 trillion searches a year, about 14 billion a day",
+       "[Search Engine Land, reporting Google's statement](https://searchengineland.com/google-5-trillion-searches-per-year-452928)"
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Measured from this machine (16 November 2026)",
+   "blocks": [
+    {
+     "type": "p",
+     "text": "These replace the earlier invented clock values. The browser figures start when it receives the key press, which is where the script now starts its clock. Tools: `curl` (six loads), `dig` (three full chases), `traceroute`, and one cold page load in the app's browser, all against `www.wikipedia.org`."
+    },
+    {
+     "type": "table",
+     "head": [
+      "Step",
+      "Measured",
+      "Clock in the script"
+     ],
+     "rows": [
+      [
+       "Name lookup, answered by the provider's resolver",
+       "20–32 ms; 3–5 ms once the operating system remembered it",
+       "0 → 30 ms"
+      ],
+      [
+       "Full chase from the root",
+       "About 500–550 ms in total: root 39–194 ms, `.org` 165–246 ms, Wikipedia's own server 151–192 ms",
+       "Grey \"slow path\" counter, 500 ms"
+      ],
+      [
+       "Handshake",
+       "29–42 ms, one round trip",
+       "30 → 65 ms"
+      ],
+      [
+       "Secure setup",
+       "35–54 ms",
+       "65 → 105 ms"
+      ],
+      [
+       "Request sent until the first byte returns",
+       "43–52 ms",
+       "105 → 155 ms"
+      ],
+      [
+       "HTML fully received",
+       "193 ms in the browser; 215–266 ms with `curl`",
+       "within S7"
+      ],
+      [
+       "Page parsed and ready",
+       "391 ms on the first, cold browser load, with 5 requests",
+       "No figure; \"less than half a second\""
+      ],
+      [
+       "Router hops",
+       "9 routers answered, then silence. The last one answered in 39 ms, the same as the whole round trip, so the server is probably one or two hops beyond",
+       "General claim kept; this path is shorter, as the twist predicts"
+      ],
+      [
+       "Where the reply came from",
+       "A Wikimedia cache host (`cp7008`), marked `hit-front`, serving a copy made 18 hours earlier",
+       "Supports the S5 twist and \"a copy it prepared earlier\" in S6"
+      ]
+     ]
+    },
+    {
+     "type": "p",
+     "text": "Limits of these measurements:"
+    },
+    {
+     "type": "list",
+     "items": [
+      "One machine, one evening, a handful of runs. Use them as a realistic example, not as typical figures.",
+      "First paint was not measured, because the app's browser did not report it. The script therefore gives no end figure, only \"less than half a second\", which the 391 ms page-ready time supports.",
+      "The keyboard step is not timed at all; the clock starts after it.",
+      "The `cp7008` numbering suggests Wikimedia's São Paulo site; that mapping was not confirmed."
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Corrected after checking",
+   "blocks": [
+    {
+     "type": "table",
+     "head": [
+      "Was",
+      "Now",
+      "Why"
+     ],
+     "rows": [
+      [
+       "\"A third of a second later, a web page appears\"",
+       "\"On a fast connection, a web page can appear in less than half a second\"",
+       "Measured 0.39 s here; a flat claim was an overstatement"
+      ],
+      [
+       "\"fits inside a single blink\"",
+       "\"about the time of one slow blink\"",
+       "The average blink is 100–150 ms; 0.4 s is the top of the range"
+      ],
+      [
+       "Invented clock values, 300 ms total",
+       "Clock rebuilt on the measurements above; it starts when the browser gets the key press and ends loosely at \"less than half a second\"",
+       "The originals were not based on anything"
+      ],
+      [
+       "The chase \"took about twenty milliseconds\"",
+       "The chase is \"the slow path\", a tenth to half a second; the normal case is a remembered answer in one round trip",
+       "Measured about half a second; Google reports 130 ms on average"
+      ],
+      [
+       "\"hundreds of times a second\" (keyboard)",
+       "\"A USB keyboard doesn't speak until it's spoken to. Many times a second…\"",
+       "That the computer polls a USB keyboard is confirmed; the exact rate rests on a secondary source, so the number is gone"
+      ],
+      [
+       "\"Zero milliseconds. Under the Enter key…\"",
+       "The keyboard part is untimed; \"this is where we start the clock\" comes when the browser gets the key",
+       "The keyboard delay could not be confirmed"
+      ],
+      [
+       "\"two pieces of metal touch\"",
+       "\"Two contacts touch\"",
+       "Not every keyboard uses metal contacts"
+      ],
+      [
+       "\"Four hundred milliseconds. Light leaves your screen.\"",
+       "\"Less than half a second after the clock started, light leaves your screen.\"",
+       "First paint was not measured"
+      ],
+      [
+       "\"glass thinner than a hair\"",
+       "\"about as thin as a human hair\"",
+       "The strand is 125 micrometres across; only its 8–10 micrometre core is thinner"
+      ],
+      [
+       "\"maybe a dozen\" routers",
+       "\"often a dozen or more\"",
+       "CAIDA median is 13"
+      ],
+      [
+       "\"Thousands\" of machines",
+       "\"Hundreds of them, sometimes thousands\"",
+       "A nearby caching site is smaller than a main data centre"
+      ],
+      [
+       "No caveat about slower pages",
+       "New line in S8: \"That was a good case…\"",
+       "Most sites are slower than this example"
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Left deliberately loose",
+   "blocks": [
+    {
+     "type": "p",
+     "text": "Nothing in the narration now depends on an unconfirmed figure. These points are worded loosely on purpose:"
+    },
+    {
+     "type": "list",
+     "items": [
+      "**Keyboard timing.** No number is spoken. One technical write-up gives 8–10 ms between checks and 15–60 ms from the start of a key press to the USB message ([Dan Luu: keyboard latency](https://danluu.com/keyboard-latency/)), but the USB specification itself was not read.",
+      "**When the first pixels appear.** No number is spoken or shown; the script says \"less than half a second\".",
+      "**Chrome adding `https`.** Stated without a version or date. The news reports ([XDA](https://www.xda-developers.com/google-chrome-default-https-version-90/), [9to5Google](https://9to5google.com/2021/01/11/google-chrome-address-bar-may-soon-default-to-https/)) were read; the original [Chromium blog post](https://blog.chromium.org/2021/03/) was not."
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Added in the final check (16 November 2026)",
+   "blocks": [
+    {
+     "type": "list",
+     "items": [
+      "**\"Less than a millisecond\" for a remembered name:** measured here. Sixty repeat lookups of `wikipedia.org` through the operating system took a median of 0.39 ms, all under 1 ms. The 3–5 ms in the table above came from a tool that adds its own start-up time.",
+      "**The failed-lookup example:** the card now shows `ww.wikipedia.org`, which returned \"no such name\" when checked. The earlier example, `wikipedai.org`, is a registered misspelling that redirects to Wikipedia, so it would not have produced the error.",
+      "**\"Dozens more files\"** became \"Often dozens more files\", and the caption \"often dozens more requests\", because this particular page needed only 5 requests."
+     ]
+    }
+   ]
+  },
+  {
+   "title": "Known simplifications",
+   "blocks": [
+    {
+     "type": "list",
+     "items": [
+      "Typing `wikipedia.org` really gets a redirect first (`301` to `www.wikipedia.org`), one extra round trip that the video skips; it shows a single request answered with `200`.",
+      "\"The operating system hands that number\": `0x28` is the keyboard's USB code. The operating system converts it into its own key event before any program sees it; the picture keeps `0x28` so one number can be followed from key to browser."
+     ]
+    },
+    {
+     "type": "p",
+     "text": "Fine to keep, worth knowing if a commenter raises them."
+    },
+    {
+     "type": "list",
+     "items": [
+      "The script says the third handshake message proves to the server that it was heard. That is true, but RFC 9293 gives the main purpose as stopping old, duplicated connection attempts from causing confusion.",
+      "\"Then it asks the operating system\": Chrome often skips the operating system and sends the question to the resolver with its own built-in client.",
+      "Built-in laptop keyboards are often not USB and are not polled this way.",
+      "Newer connections (HTTP/3 over QUIC) merge the handshake and the encryption setup into one step.",
+      "The request is described as \"a few lines of text\". Modern connections (HTTP/2, which this load used) send the same information in a compact binary form.",
+      "Wikipedia runs its own caching sites and does not rent a commercial network; the \"copy near you\" point still holds.",
+      "The address check in S1 is simplified; browsers also consult history, a list of known suffixes and a list of sites that must use HTTPS."
+     ]
+    }
+   ]
+  }
+ ],
+ "narration": [
+  {
+   "id": "S0",
+   "name": "Cold open",
+   "clock": "clock hidden, then 0 ms",
+   "paragraphs": [
+    "You press Enter.",
+    "On a fast connection, a web page can appear in less than half a second.",
+    "In that time, your computer asked a chain of strangers for directions. It introduced itself to a machine it has never met. The two of them agreed on a secret code, out loud, in front of everyone, and nobody listening could work it out. Then a pulse of light carried your request under the street.",
+    "All of it, in about the time of one slow blink.",
+    "So let's slow time down. One blink, stretched across ten minutes. This is everything that happens when you press Enter."
+   ]
+  },
+  {
+   "id": "S1",
+   "name": "The key",
+   "clock": "clock held at 0 ms",
+   "paragraphs": [
+    "It starts under the Enter key. Two contacts touch. A circuit closes, and a tiny chip inside the keyboard notices. It doesn't send the word \"Enter\". It sends a number.",
+    "A USB keyboard doesn't speak until it's spoken to. Many times a second, your computer asks it: anything new? This time, the answer is yes.",
+    "The operating system hands that number to whichever window is in front: your browser. And this is where we start the clock.",
+    "Zero milliseconds. The browser's first job is surprisingly basic. It has to work out what you meant. Is \"wikipedia dot org\" an address, or something to search for?",
+    "It has a dot. It has no spaces. It looks like an address. So the browser adds the part you didn't type, H-T-T-P-S, and gets ready to go.",
+    "There's just one problem."
+   ]
+  },
+  {
+   "id": "S2",
+   "name": "Finding the address: DNS",
+   "clock": "0 → 30 ms",
+   "paragraphs": [
+    "Your computer has no idea where Wikipedia is.",
+    "Names are for humans. Machines find each other with numbers, called IP addresses. So before anything else, the name has to become a number.",
+    "First the browser checks its own memory. Have I been here recently? Then it asks the operating system. If either one remembers, this step takes less than a millisecond. Let's say they don't.",
+    "So your computer asks a stranger: a server called a resolver, usually run by your internet provider. And if the resolver doesn't know either, it goes on a chase.",
+    "It starts at the top, with a root server. The root doesn't know where Wikipedia is, but it knows who handles every name ending in dot org. So the resolver asks them. The dot org servers don't have the answer either, but they know which server is in charge of Wikipedia's name. The resolver asks that one.",
+    "And finally, a number comes back.",
+    "Four strangers. Three of them said \"not me, try over there\".",
+    "That full chase is the slow path. It can take a tenth of a second, sometimes half a second. So everyone along the way keeps notes. For a popular site, the resolver already has the answer, and your number comes back in one short round trip.",
+    "When this step fails, you've seen the result. \"This site can't be reached.\" That's the internet telling you: I asked everyone, and nobody knows that name."
+   ]
+  },
+  {
+   "id": "S3",
+   "name": "The handshake: TCP",
+   "clock": "30 → 65 ms",
+   "paragraphs": [
+    "Thirty milliseconds.",
+    "Now your computer has a number. But it can't just start shouting data at it. The internet is unreliable. Messages get lost, duplicated, delivered in the wrong order. So first, the two machines make a deal.",
+    "Your computer sends one tiny message: can you hear me?",
+    "The server replies: I hear you. Can you hear me?",
+    "And your computer answers: I hear you too.",
+    "Three messages. Why three, and not two?",
+    "Because after two, only your side knows the line works in both directions. The server has spoken, but it has no proof that anyone heard it. The third message is that proof.",
+    "From here on, every piece of data is numbered, so anything that goes missing can be noticed and sent again. Remember that. It matters later."
+   ]
+  },
+  {
+   "id": "S4",
+   "name": "A secret in public: TLS",
+   "clock": "65 → 105 ms",
+   "paragraphs": [
+    "Sixty-five milliseconds.",
+    "There's a connection. But right now, anyone along the route could read every word. The café Wi-Fi. Your internet provider. Every machine in between.",
+    "So the two sides need a secret code. And here's the puzzle: they have never met, and everything they say to each other can be overheard. How do you agree on a secret in public?",
+    "Picture paint.",
+    "You and the server openly agree on a common colour. Yellow. Everyone can see it. Then each of you secretly picks a private colour, and mixes it into the yellow. You swap the mixtures, in full view. Now each of you adds your own private colour to the mixture you received.",
+    "And you both end up with exactly the same final colour.",
+    "An eavesdropper saw the yellow, and saw both mixtures. But un-mixing paint is practically impossible. The real version uses enormous numbers instead of paint, and the idea is the same: easy to mix, almost impossible to un-mix.",
+    "One thing is still missing. How do you know this is really Wikipedia, and not an impostor?",
+    "The server shows an ID: a certificate, signed by an organisation your device already trusts. If that signature doesn't check out, you get the red warning. \"Your connection is not private.\"",
+    "It checks out. The padlock closes. From here on, everything is scrambled."
+   ]
+  },
+  {
+   "id": "S5",
+   "name": "The trip",
+   "clock": "105 → 125 ms",
+   "paragraphs": [
+    "A hundred and five milliseconds.",
+    "Finally, your browser sends what you actually wanted to say. It's almost an anticlimax. A few lines of text: get me the home page.",
+    "And here's something I skipped. Every message so far, every \"can you hear me\", every jar of paint, made a physical journey. Let's follow this one.",
+    "It leaves your laptop as radio waves. Soon after, it becomes pulses of light in a strand of glass about as thin as a human hair. Inside that glass, your request moves at about two hundred thousand kilometres per second.",
+    "It doesn't know the route. Nothing does. It's passed from router to router, often a dozen or more, and each one knows only one thing: which neighbour is a step closer.",
+    "You might picture it diving into a cable on the ocean floor. Those cables are real, and they carry nearly all the data that moves between continents.",
+    "But your request probably never gets that far. Because the big sites worked out a trick: if the trip takes too long, shorten the trip. They keep copies of themselves in hundreds of cities around the world. Your request most likely ends in a building not far from where you're sitting."
+   ]
+  },
+  {
+   "id": "S6",
+   "name": "The server",
+   "clock": "125 → 140 ms",
+   "paragraphs": [
+    "A hundred and twenty-five milliseconds.",
+    "Your request arrives at a building full of machines. Hundreds of them, sometimes thousands, and it only needs one.",
+    "At the door stands a load balancer. Its whole job is to look at who's busy and point: you, take this one.",
+    "That server reads your request and gathers what it needs. Sometimes it asks a database. Sometimes it grabs a copy it prepared earlier. Then it builds the reply.",
+    "On top goes a three-digit code. Two hundred means: here you go. And if the page doesn't exist, this is the moment a 404 is born."
+   ]
+  },
+  {
+   "id": "S7",
+   "name": "The reply and the page",
+   "clock": "140 ms → under half a second",
+   "paragraphs": [
+    "A hundred and forty milliseconds.",
+    "The reply is too big for one message. So it's chopped into packets, each holding about a paragraph of text, and each one finds its own way back.",
+    "Some arrive out of order. Some don't arrive at all. Remember the numbering from the handshake? This is what it was for. Your computer puts them back in order, and asks again for anything that's missing.",
+    "What arrives isn't a picture of a web page. It's instructions. And as the browser reads them, it discovers the job has barely started. This page needs a stylesheet. And fonts. And scripts, and images. Often dozens more files, each one a new request, and most of them make the same trip you just watched.",
+    "While they stream in, the browser builds the page in layers. First the structure: what is a heading, what is a paragraph. Then the style: colours and sizes. Then the geometry: where every box sits, down to the pixel.",
+    "And then, at last, it paints.",
+    "Less than half a second after the clock started, light leaves your screen."
+   ]
+  },
+  {
+   "id": "S8",
+   "name": "One blink",
+   "clock": "real time",
+   "paragraphs": [
+    "That took ten minutes. Here it is at real speed.",
+    "*(pause for the replay)*",
+    "Again.",
+    "*(pause for the replay)*",
+    "That was a good case: a fast connection, a copy of the site nearby, a light page. Plenty of pages take longer, a second or more. But the steps are always the same.",
+    "A circuit closing. Four strangers. Three hellos. A secret mixed in public. Light in glass. A doorman, a reply in pieces, and a page drawn in layers.",
+    "And this isn't happening once. It's happening billions of times a day, all over the world, and almost every time, it just works.",
+    "But one step in this story hides something strange. That strand of glass? The light inside it should leak out through the sides. It doesn't, and the reason is a beautiful piece of physics.",
+    "That's the next video."
+   ]
+  }
+ ]
+}

@@ -22,6 +22,7 @@ const PRIORITY: Record<PageKey, number> = {
   "semantic-search": 0.6,
   "one-loop": 0.6,
   "public-forms": 0.6,
+  "one-blink": 0.7,
 };
 
 /**

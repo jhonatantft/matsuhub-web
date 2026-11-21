@@ -1,7 +1,9 @@
+import Link from "next/link";
 import { JsonLd } from "@/components/segments/JsonLd";
 import { SplitHeader } from "@/components/segments/SplitHeader";
 import { Reveal } from "@/components/ui/Reveal";
 import { LAB_EXPERIMENTS, LAB_EXPLAINERS, LAB_HREFS, LAB_ITEMS, LAB_NOTES, LAB_UI } from "@/content/lab";
+import { LAB_VIDEOS, QUARXEL, VIDEO_UI, videoPath, youtubeThumb } from "@/content/lab/videos";
 import { SITE } from "@/content/site";
 import { HTML_LANG, t, type Lang } from "@/lib/i18n";
 import { siteUrl } from "@/lib/site-url";
@@ -102,6 +104,39 @@ export function LabIndex({ lang }: { lang: Lang }) {
           </ul>
         </div>
       </section>
+
+      {LAB_VIDEOS.length > 0 && (
+        <section id="videos" aria-labelledby="lab-videos-title" className={`${section} scroll-mt-[var(--nav-h)]`}>
+          <div className="mx-auto max-w-[1360px]">
+            <SplitHeader id="lab-videos-title" label={t(VIDEO_UI.sectionLabel, lang)} title={t(VIDEO_UI.sectionTitle, lang)} lead={t(VIDEO_UI.sectionLead, lang)} />
+            <ul className="mt-10 grid grid-cols-1 gap-5 lg:mt-14 lg:grid-cols-2">
+              {LAB_VIDEOS.map((video, i) => (
+                <Reveal as="li" key={video.id} delay={0.08 * i}>
+                  <Link href={videoPath(video.id, lang)} className="card group block h-full overflow-hidden rounded-[20px] transition-colors hover:border-acc/40">
+                    <span className="relative block aspect-video overflow-hidden bg-black">
+                      {/* eslint-disable-next-line @next/next/no-img-element -- remote YouTube thumbnail */}
+                      <img src={youtubeThumb(video.youtubeId)} alt="" loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover opacity-85 transition-[opacity,transform] duration-500 group-hover:scale-[1.03] group-hover:opacity-100" />
+                      <span className="absolute right-3 bottom-3 rounded-md bg-bg/85 px-2 py-1 font-mono text-[11px] text-ink">{video.duration}</span>
+                    </span>
+                    <span className="block p-6">
+                      <span className="label">
+                        {QUARXEL.name} · {video.series}
+                      </span>
+                      <span className="mt-3 block font-display text-[clamp(20px,2vw,26px)] leading-[1.15] font-bold tracking-[-0.025em]">
+                        {t(video.title, lang)} <span className="text-gradient">{t(video.accent, lang)}</span>
+                      </span>
+                      <span className="mt-3 block text-[15px] leading-relaxed text-mute">{t(video.summary, lang)}</span>
+                      <span className="mt-5 inline-flex items-center gap-2 font-medium text-acc">
+                        {t(VIDEO_UI.open, lang)} <span aria-hidden className="transition-transform group-hover:translate-x-1">→</span>
+                      </span>
+                    </span>
+                  </Link>
+                </Reveal>
+              ))}
+            </ul>
+          </div>
+        </section>
+      )}
 
       <LabCta lang={lang} />
     </>

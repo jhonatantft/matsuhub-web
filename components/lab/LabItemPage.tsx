@@ -4,10 +4,12 @@ import { Label } from "@/components/ui/Label";
 import { Reveal } from "@/components/ui/Reveal";
 import { LAB_HREFS, LAB_ITEMS, LAB_UI, labById, readingMinutes, type LabId } from "@/content/lab";
 import { LAB_BODIES } from "@/content/lab/bodies";
+import { VIDEO_UI, videoPath, videosForLab } from "@/content/lab/videos";
 import { SITE } from "@/content/site";
 import { fill, HTML_LANG, t, type Lang } from "@/lib/i18n";
 import { siteUrl } from "@/lib/site-url";
 import { LabBody, LabCard, LabCta } from "./LabParts";
+import { VideoPlayer } from "./VideoPlayer";
 
 const line = (i: number) => ({ "--i": i }) as React.CSSProperties;
 
@@ -24,6 +26,7 @@ export function LabItemPage({ id, lang, children }: { id: LabId; lang: Lang; chi
   const base = siteUrl();
   const others = LAB_ITEMS.filter((other) => other.id !== id);
   const title = `${t(item.title, lang)} ${t(item.accent, lang)}`;
+  const videos = videosForLab(id);
 
   return (
     <>
@@ -101,6 +104,27 @@ export function LabItemPage({ id, lang, children }: { id: LabId; lang: Lang; chi
       </header>
 
       {children && <div className="relative px-[var(--pad)] pb-[clamp(56px,7vw,96px)]">{children}</div>}
+
+      {videos.map((video) => (
+        <section key={video.id} aria-labelledby={`lab-video-${video.id}`} className="relative px-[var(--pad)] pb-[clamp(56px,7vw,96px)]">
+          <div className="mx-auto grid max-w-[1360px] gap-8 lg:grid-cols-[minmax(0,0.42fr)_minmax(0,1fr)] lg:gap-16">
+            <div>
+              <p className="label">{t(VIDEO_UI.fromVideo, lang)}</p>
+              <h2 id={`lab-video-${video.id}`} className="h-section mt-4 max-w-[18ch] text-[clamp(24px,2.6vw,38px)]">
+                {t(video.title, lang)} <span className="text-gradient">{t(video.accent, lang)}</span>
+              </h2>
+              <p className="mt-5 max-w-[52ch] text-[15.5px] leading-relaxed text-mute">{t(VIDEO_UI.channel, lang)}</p>
+              <Link
+                href={videoPath(video.id, lang)}
+                className="mt-6 inline-flex items-center gap-2 font-medium text-acc underline decoration-acc/30 underline-offset-4 transition-colors hover:decoration-acc"
+              >
+                {t(VIDEO_UI.researchLink, lang)} <span aria-hidden>→</span>
+              </Link>
+            </div>
+            <VideoPlayer youtubeId={video.youtubeId} title={video.youtubeTitle} playLabel={t(VIDEO_UI.play, lang)} />
+          </div>
+        </section>
+      ))}
 
       <article aria-labelledby={isNote ? undefined : "lab-how-title"} className="relative px-[var(--pad)] pb-[clamp(72px,9vw,128px)]">
         <div className="mx-auto max-w-[1360px] lg:grid lg:grid-cols-[minmax(0,0.42fr)_minmax(0,1fr)] lg:gap-16">

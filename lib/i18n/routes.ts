@@ -1,4 +1,5 @@
 import { isLabId, LAB_HREFS, LAB_IDS, type LabId } from "@/content/lab";
+import { isVideoId, VIDEO_IDS, videoPath, type VideoId } from "@/content/lab/videos";
 import { SEGMENT_HREFS, SEGMENT_IDS, type SegmentId } from "@/content/segments";
 import { HTML_LANG, LANGS, type Lang } from "./core";
 import { HOME_PATH } from "./sections";
@@ -8,8 +9,8 @@ import { HOME_PATH } from "./sections";
  * switcher, hreflang alternates and the sitemap all read this. Demos, labs and APIs are
  * single-language and stay out of it.
  */
-export type PageKey = "home" | "solutions" | "custom" | SegmentId | "lab" | LabId;
-export const PAGE_KEYS: readonly PageKey[] = ["home", "solutions", ...SEGMENT_IDS, "custom", "lab", ...LAB_IDS];
+export type PageKey = "home" | "solutions" | "custom" | SegmentId | "lab" | LabId | VideoId;
+export const PAGE_KEYS: readonly PageKey[] = ["home", "solutions", ...SEGMENT_IDS, "custom", "lab", ...LAB_IDS, ...VIDEO_IDS];
 
 export function pagePath(key: PageKey, lang: Lang): string {
   if (key === "home") return HOME_PATH[lang];
@@ -17,6 +18,7 @@ export function pagePath(key: PageKey, lang: Lang): string {
   if (key === "custom") return SEGMENT_HREFS[lang].custom;
   if (key === "lab") return LAB_HREFS[lang].index;
   if (isLabId(key)) return LAB_HREFS[lang].item(key);
+  if (isVideoId(key)) return videoPath(key, lang);
   return SEGMENT_HREFS[lang].segment(key);
 }
 
